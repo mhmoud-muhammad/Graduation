@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/firebase_errors.dart';
+import '../../core/messages.dart';
 import '../../core/validators.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
@@ -29,14 +30,23 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// مخطط تسلسل تسجيل الدخول:
+  /// إدخال الإيميل والرقم السري ← النظام يتحقق من البيانات (Firebase Auth)
+  /// ← غير صحيحة: "البيانات غير صحيحة الرجاء إعادة الإدخال" ثم رجوع
+  /// ← صحيحة: النظام يفتح الشاشة الخاصة بالمستخدم أو الصيدلي (AuthGate).
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
       await Services.I.auth.signIn(_email.text, _password.text);
-      // AuthGate يتولى التوجيه بعد نجاح الدخول.
     } catch (e) {
-      if (mounted) showSnack(context, friendlyError(e), error: true);
+      if (mounted) {
+        await showInvalidDataDialog(
+          context,
+          title: Msg.invalidReenter,
+          reason: friendlyError(e),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

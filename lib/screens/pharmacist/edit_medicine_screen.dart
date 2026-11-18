@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_config.dart';
 import '../../core/app_theme.dart';
 import '../../core/firebase_errors.dart';
+import '../../core/messages.dart';
 import '../../core/formatters.dart';
 import '../../core/validators.dart';
 import '../../services/services.dart';
@@ -45,6 +46,8 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
     setState(() => _quantity.text = next.toString());
   }
 
+  /// مخطط تسلسل الصيدلي (3): تعديل السعر أو الكمية ← إرسال طلب التعديل
+  /// ← تعديل السعر أو الكمية في availability ← "تم تحديث البيانات بنجاح".
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -55,7 +58,7 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
         quantity: int.parse(_quantity.text.trim()),
       );
       if (!mounted) return;
-      showSnack(context, 'تم حفظ التعديلات');
+      showSnack(context, Msg.medicineUpdated);
       Navigator.pop(context);
     } catch (e) {
       if (mounted) showSnack(context, friendlyError(e), error: true);
@@ -64,6 +67,8 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
     }
   }
 
+  /// مخطط تسلسل الصيدلي (4): اختيار حذف الدواء ← إرسال طلب حذف الدواء
+  /// ← حذف البيانات من availability ← "تم حذف الدواء بنجاح".
   Future<void> _delete() async {
     final ok = await confirmDialog(
       context,
@@ -81,7 +86,7 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
         widget.item.availability.availabilityId,
       );
       if (!mounted) return;
-      showSnack(context, 'تم حذف الدواء');
+      showSnack(context, Msg.medicineDeleted);
       Navigator.pop(context);
     } catch (e) {
       if (mounted) showSnack(context, friendlyError(e), error: true);

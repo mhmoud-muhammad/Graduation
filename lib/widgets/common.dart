@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../core/messages.dart';
 
 /// خلفية بموجات زرقاء كما في التصميم.
 class WaveBackground extends StatelessWidget {
@@ -253,6 +254,37 @@ class FieldLabel extends StatelessWidget {
         fontWeight: FontWeight.w700,
         color: AppColors.navy,
       ),
+    ),
+  );
+}
+
+/// رسالة "البيانات غير صحيحة" مع زر "رجوع" للعودة وإعادة الإدخال
+/// (الخطوة "رجوع()" في مخططات تسلسل الدخول وإنشاء الحساب).
+Future<void> showInvalidDataDialog(
+  BuildContext context, {
+  required String title,
+  String? reason,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      icon: const Icon(Icons.error_outline, color: AppColors.danger, size: 40),
+      title: Text(title, textAlign: TextAlign.center),
+      content: reason == null
+          ? null
+          : Text(
+              reason,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.muted),
+            ),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        FilledButton(
+          style: FilledButton.styleFrom(minimumSize: const Size(140, 46)),
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text(Msg.back),
+        ),
+      ],
     ),
   );
 }

@@ -17,8 +17,9 @@ Future<List<DocumentSnapshot<Map<String, dynamic>>>> fetchByIds(
   final unique = ids.toSet().toList();
   if (unique.isEmpty) return const [];
   final snaps = await Future.wait(
-    chunked(unique)
-        .map((part) => col.where(FieldPath.documentId, whereIn: part).get()),
+    chunked(
+      unique,
+    ).map((part) => col.where(FieldPath.documentId, whereIn: part).get()),
   );
   return [for (final s in snaps) ...s.docs];
 }

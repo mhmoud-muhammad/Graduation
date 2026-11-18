@@ -37,6 +37,10 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
     super.dispose();
   }
 
+  /// مخطط تسلسل البحث بالكتابة: إدخال الاسم التجاري أو العلمي ← إرسال اسم
+  /// الدواء للبحث ← البحث عن الدواء في medicines ← البحث عنها في availability
+  /// ← بيانات الصيدليات المتوفر فيها الدواء ← عرض اسم الصيدلية والموقع
+  /// والكمية والسعر.
   Future<void> _search() async {
     final q = _query.text.trim();
     if (q.length < 2) {
@@ -98,7 +102,8 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
               EmptyState(
                 icon: Icons.search_off,
                 title: 'لم يتم العثور على "$_notFoundFor"',
-                message: 'تأكد من كتابة الاسم بشكل صحيح، أو جرّب البحث بصورة العبوة.',
+                message:
+                    'تأكد من كتابة الاسم بشكل صحيح، أو جرّب البحث بصورة العبوة.',
                 action: OutlinedButton.icon(
                   icon: const Icon(Icons.photo_camera_outlined),
                   label: const Text('البحث بالصورة'),

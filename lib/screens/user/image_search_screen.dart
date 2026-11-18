@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/firebase_errors.dart';
+import '../../core/messages.dart';
 import '../../models/search_models.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
@@ -65,6 +66,11 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
     }
   }
 
+  /// مخطط تسلسل البحث بالصورة: اختيار صورة الدواء من المعرض أو التقاطها
+  /// بالكاميرا ← إرسال الصورة للتحليل ← (تحليل بيانات الصورة: Gemini) معالجة
+  /// الصورة واستخراج اسم الدواء ← البحث عن الدواء بالاسم المستخرج
+  /// ← إرجاع بيانات الدواء ← عرض نتائج البحث والصيدليات المتوفر فيها
+  /// وموقعها والسعر والكمية.
   Future<void> _analyze() async {
     final bytes = _bytes;
     if (bytes == null) return;
@@ -261,9 +267,7 @@ class _AnalysisCard extends StatelessWidget {
         child: ListTile(
           leading: const Icon(Icons.blur_on, color: Colors.orange),
           title: const Text('الصورة غير واضحة'),
-          subtitle: Text(
-            analysis.note ?? 'لم نتمكن من قراءة اسم الدواء. جرّب صورة أوضح أو اكتب الاسم يدوياً.',
-          ),
+          subtitle: Text(analysis.note ?? Msg.imageNotRecognized),
           trailing: IconButton(
             icon: const Icon(Icons.keyboard_alt_outlined),
             tooltip: 'البحث بالكتابة',

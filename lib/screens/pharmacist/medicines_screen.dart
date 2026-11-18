@@ -20,8 +20,15 @@ class StockItem {
 
 /// واجهة إدارة الأدوية: عرض أدوية الصيدلية والبحث فيها والإضافة والتعديل.
 class MedicinesScreen extends StatefulWidget {
-  const MedicinesScreen({super.key, required this.pharmacy});
+  const MedicinesScreen({
+    super.key,
+    required this.pharmacy,
+    this.openAddFirst = false,
+  });
   final Pharmacy pharmacy;
+
+  /// يُفتح نموذج إضافة دواء مباشرة (بعد تسجيل الصيدلية لأول مرة).
+  final bool openAddFirst;
 
   @override
   State<MedicinesScreen> createState() => _MedicinesScreenState();
@@ -32,6 +39,20 @@ class _MedicinesScreenState extends State<MedicinesScreen> {
   final Map<String, Medicine> _cache = {};
   late final Stream<List<Availability>> _stream = Services.I.medicines
       .watchPharmacyStock(widget.pharmacy.pharmacyId);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openAddFirst) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openAdd());
+    }
+  }
+
+  void _openAdd() => Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => AddMedicineScreen(pharmacy: widget.pharmacy),
+    ),
+  );
 
   @override
   void dispose() {
@@ -78,11 +99,7 @@ class _MedicinesScreenState extends State<MedicinesScreen> {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('إضافة دواء'),
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => AddMedicineScreen(pharmacy: widget.pharmacy),
-          ),
-        ),
+        onPressed: _openAdd,
       ),
       body: Column(
         children: [
@@ -122,7 +139,8 @@ class _MedicinesScreenState extends State<MedicinesScreen> {
                       return const EmptyState(
                         icon: Icons.medication_outlined,
                         title: 'لا توجد أدوية بعد',
-                        message: 'اضغط "إضافة دواء" لإضافة أول دواء متوفر في صيدليتك.',
+                        message:
+                            'اضغط "إضافة دواء" لإضافة أول دواء متوفر في صيدليتك.',
                       );
                     }
                     final items = _applyFilter(all);

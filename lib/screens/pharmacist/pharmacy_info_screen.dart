@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 import '../../core/app_config.dart';
 import '../../core/app_theme.dart';
 import '../../core/firebase_errors.dart';
+import '../../core/messages.dart';
 import '../../core/validators.dart';
 import '../../models/app_user.dart';
 import '../../models/pharmacy.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
+import 'medicines_screen.dart';
 
 /// واجهة بيانات الصيدلية (FR-08): الاسم والعنوان والهاتف والموقع الجغرافي.
 class PharmacyInfoScreen extends StatefulWidget {
@@ -88,25 +90,39 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
     _setPoint(LatLng(pos.latitude, pos.longitude));
   }
 
+  /// مخطط تسلسل الصيدلي (1): إدخال اسم الصيدلية والعنوان والهاتف وتحديد
+  /// الموقع ← قم بحفظ البيانات ← حفظ في مجموعة pharmacies
+  /// ← "تم حفظ بيانات الصيدلية".
+  /// ومخطط النشاط: بعد تسجيل بيانات الصيدلية لأول مرة ينتقل الصيدلي إلى
+  /// إضافة بيانات الأدوية ثم تحديثها.
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
     final p = _point!;
+    final firstTime = widget.pharmacy == null;
+    final pharmacy = Pharmacy(
+      pharmacyId: widget.owner.userId,
+      ownerId: widget.owner.userId,
+      pharmacyName: _name.text.trim(),
+      address: _address.text,
+      phone: _phone.text,
+      latitude: p.latitude,
+      longitude: p.longitude,
+    );
     setState(() => _saving = true);
     try {
-      await Services.I.pharmacies.save(
-        Pharmacy(
-          pharmacyId: widget.owner.userId,
-          ownerId: widget.owner.userId,
-          pharmacyName: _name.text,
-          address: _address.text,
-          phone: _phone.text,
-          latitude: p.latitude,
-          longitude: p.longitude,
-        ),
-      );
+      await Services.I.pharmacies.save(pharmacy);
       if (!mounted) return;
-      showSnack(context, 'تم حفظ بيانات الصيدلية');
-      Navigator.pop(context);
+      showSnack(context, Msg.pharmacySaved);
+      if (firstTime) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) =>
+                MedicinesScreen(pharmacy: pharmacy, openAddFirst: true),
+          ),
+        );
+      } else {
+        Navigator.pop(context);
+      }
     } catch (e) {
       if (mounted) showSnack(context, friendlyError(e), error: true);
     } finally {

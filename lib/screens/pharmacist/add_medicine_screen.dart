@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_config.dart';
 import '../../core/firebase_errors.dart';
+import '../../core/messages.dart';
 import '../../core/validators.dart';
 import '../../models/pharmacy.dart';
 import '../../services/services.dart';
@@ -34,11 +35,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     super.dispose();
   }
 
+  /// مخطط تسلسل الصيدلي (2): إدخال بيانات الدواء ← إرسال بيانات الدواء
+  /// ← البحث عن الدواء في medicines ← (غير موجود: إنشاء دواء جديد وحفظه)
+  /// ← حفظ سجل التوفر في availability ← "تمت إضافة الدواء بنجاح".
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
-      final m = await Services.I.medicines.addToPharmacy(
+      await Services.I.medicines.addToPharmacy(
         pharmacyId: widget.pharmacy.pharmacyId,
         tradeName: _trade.text,
         scientificName: _scientific.text,
@@ -48,7 +52,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         quantity: int.parse(_quantity.text.trim()),
       );
       if (!mounted) return;
-      showSnack(context, 'تم حفظ "${m.tradeName}" في قائمة الصيدلية');
+      showSnack(context, Msg.medicineAdded);
       Navigator.pop(context);
     } catch (e) {
       if (mounted) showSnack(context, friendlyError(e), error: true);

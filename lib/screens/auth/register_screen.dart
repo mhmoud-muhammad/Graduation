@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/firebase_errors.dart';
+import '../../core/messages.dart';
 import '../../core/validators.dart';
 import '../../models/app_user.dart';
 import '../../services/services.dart';
@@ -33,6 +34,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// مخطط تسلسل إنشاء الحساب:
+  /// إدخال الاسم والبريد وكلمة المرور ورقم الهاتف واختيار نوع الحساب
+  /// ← النظام يتحقق من البيانات ← غير صحيحة: رسالة ثم رجوع
+  /// ← صحيحة: "تم إنشاء الحساب وحفظه" والنظام يفتح الشاشة الخاصة بنوع الحساب.
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -44,10 +49,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         phone: _phone.text,
         userType: _type,
       );
-      // الرجوع للجذر حيث يوجّه AuthGate المستخدم حسب نوعه.
-      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
+      if (!mounted) return;
+      showSnack(context, Msg.accountCreated);
+      // الرجوع للجذر حيث يفتح AuthGate الشاشة الخاصة بنوع الحساب.
+      Navigator.of(context).popUntil((r) => r.isFirst);
     } catch (e) {
-      if (mounted) showSnack(context, friendlyError(e), error: true);
+      if (mounted) {
+        await showInvalidDataDialog(
+          context,
+          title: _type == UserType.pharmacist
+              ? Msg.invalidReenter
+              : Msg.invalidRetry,
+          reason: friendlyError(e),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
