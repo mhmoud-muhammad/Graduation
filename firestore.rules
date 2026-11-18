@@ -1,0 +1,85 @@
+rules_version = '2';
+
+// قواعد أمان Firestore لتطبيق "دوائي" (NFR-03)
+// - كل مستخدم مسجل يمكنه قراءة الصيدليات والأدوية والتوفر (للبحث).
+// - الصيدلي فقط يكتب بيانات صيدليته وسجلات التوفر الخاصة بها.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function isPharmacist() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(uid())).data.userType == 'pharmacist';
+    }
+    function ownsPharmacy(pharmacyId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/pharmacies/$(pharmacyId))
+        && get(/databases/$(database)/documents/pharmacies/$(pharmacyId)).data.ownerId == uid();
+    }
+
+    // المستخدمون: كل مستخدم يقرأ ويكتب وثيقته فقط، ولا يمكن تغيير نوع الحساب.
+    match /users/{userId} {
+      allow read: if signedIn() && uid() == userId;
+      allow create: if signedIn() && uid() == userId
+        && request.resource.data.userId == userId
+        && request.resource.data.userType in ['user', 'pharmacist']
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0;
+      allow update: if signedIn() && uid() == userId
+        && request.resource.data.userType == resource.data.userType;
+      allow delete: if false;
+    }
+
+    // الصيدليات: معرّف الصيدلية = معرّف الصيدلي المالك.
+    match /pharmacies/{pharmacyId} {
+      allow read: if signedIn();
+      allow create, update: if isPharmacist()
+        && pharmacyId == uid()
+        && request.resource.data.ownerId == uid()
+        && request.resource.data.pharmacyName is string
+        && request.resource.data.pharmacyName.size() > 0
+        && request.resource.data.latitude is number
+        && request.resource.data.latitude >= -90
+        && request.resource.data.latitude <= 90
+        && request.resource.data.longitude is number
+        && request.resource.data.longitude >= -180
+        && request.resource.data.longitude <= 180;
+      allow delete: if signedIn() && resource.data.ownerId == uid();
+    }
+
+    // الأدوية: قائمة مشتركة؛ ينشئها الصيدلي عند الإضافة ولا يمكن تغيير الأسماء.
+    match /medicines/{medicineId} {
+      allow read: if signedIn();
+      allow create: if isPharmacist()
+        && request.resource.data.tradeName is string
+        && request.resource.data.tradeName.size() > 0
+        && request.resource.data.scientificName is string
+        && request.resource.data.scientificName.size() > 0
+        && request.resource.data.searchKeys is list;
+      // يسمح فقط بإكمال الباركود أو الشكل الدوائي الناقصين.
+      allow update: if isPharmacist()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['barcode', 'form']);
+      allow delete: if false;
+    }
+
+    // توفر الأدوية: الصيدلي يدير سجلات صيدليته فقط.
+    match /availability/{availabilityId} {
+      allow read: if signedIn();
+      allow create: if ownsPharmacy(request.resource.data.pharmacyId)
+        && availabilityId == request.resource.data.pharmacyId + '_' + request.resource.data.medicineId
+        && request.resource.data.price is number
+        && request.resource.data.price >= 0
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity >= 0;
+      allow update: if ownsPharmacy(resource.data.pharmacyId)
+        && request.resource.data.pharmacyId == resource.data.pharmacyId
+        && request.resource.data.medicineId == resource.data.medicineId
+        && request.resource.data.price is number
+        && request.resource.data.price >= 0
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity >= 0;
+      allow delete: if ownsPharmacy(resource.data.pharmacyId);
+    }
+  }
+}

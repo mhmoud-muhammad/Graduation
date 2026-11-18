@@ -1,0 +1,2 @@
+// انسخ هذا الملف إلى MapsKey.xcconfig وضع مفتاح Google Maps لنظام iOS
+MAPS_API_KEY=YOUR_IOS_MAPS_API_KEY
