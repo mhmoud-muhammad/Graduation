@@ -68,7 +68,7 @@ lib/
 ## خطوات التشغيل والربط مع Firebase
 
 ### 1) المتطلبات
-- Flutter SDK (الإصدار المستقر الحالي) — `flutter doctor`
+- Flutter SDK 3.47 أو أحدث (Dart 3.13+) — `flutter doctor`
 - حساب Firebase و Node.js (لأداة `firebase`)
 
 ### 2) إنشاء مشروع Firebase وتفعيل الخدمات

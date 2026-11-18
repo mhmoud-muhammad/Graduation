@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 /// الألوان والهوية البصرية المستخرجة من تصميم الشاشات.
 abstract final class AppColors {
