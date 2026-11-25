@@ -16,16 +16,21 @@ abstract final class AppConfig {
   static const double defaultLat = 15.5007;
   static const double defaultLng = 32.5599;
 
-  /// أشكال الأدوية المتاحة عند الإضافة.
-  static const List<String> medicineForms = [
+  /// الأشكال الصيدلانية المتاحة عند إضافة دواء (FR-09).
+  static const List<String> pharmaceuticalForms = [
     'أقراص',
     'كبسولات',
     'شراب',
     'حقن',
-    'مرهم / كريم',
-    'قطرة',
+    'مرهم',
+    'كريم',
+    'قطرات',
     'بخاخ',
+    'فوار',
     'تحاميل',
     'أخرى',
   ];
+
+  /// مهلة العمليات الشبكية قبل اعتبار الاتصال ضعيفاً (NFR-06).
+  static const Duration networkTimeout = Duration(seconds: 15);
 }

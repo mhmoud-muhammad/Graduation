@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
-import '../../core/firebase_errors.dart';
 import '../../core/messages.dart';
 import '../../core/validators.dart';
 import '../../models/app_user.dart';
@@ -21,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
+  final _license = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
   UserType _type = UserType.user;
@@ -28,48 +28,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _email, _phone, _password, _confirm]) {
+    for (final c in [_name, _email, _phone, _license, _password, _confirm]) {
       c.dispose();
     }
     super.dispose();
   }
 
-  /// مخطط تسلسل إنشاء الحساب:
-  /// إدخال الاسم والبريد وكلمة المرور ورقم الهاتف واختيار نوع الحساب
-  /// ← النظام يتحقق من البيانات ← غير صحيحة: رسالة ثم رجوع
-  /// ← صحيحة: "تم إنشاء الحساب وحفظه" والنظام يفتح الشاشة الخاصة بنوع الحساب.
+  /// تسلسل إنشاء حساب (المستخدم / الصيدلي): إدخال الاسم والبريد وكلمة المرور
+  /// ورقم الهاتف واختيار نوع الحساب ← الضغط على "إنشاء الحساب" ← التحقق:
+  /// - ضعف الاتصال: "فشلت عملية إنشاء الحساب، الرجاء المحاولة مرة أخرى..."
+  /// - بيانات غير صحيحة أو بريد مستخدم مسبقاً: رسالة ثم التصحيح
+  /// - صحيحة: إنشاء الحساب في Firebase Authentication وحفظ بياناته ونوعه في
+  ///   users ← "تم إنشاء الحساب بنجاح" والتوجيه إلى شاشة تسجيل الدخول.
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
     setState(() => _loading = true);
-    try {
-      await Services.I.auth.register(
+    final ok = await runWithRetry(
+      context,
+      () => Services.I.auth.register(
         name: _name.text,
         email: _email.text,
         password: _password.text,
         phone: _phone.text,
         userType: _type,
-      );
-      if (!mounted) return;
-      showSnack(context, Msg.accountCreated);
-      // الرجوع للجذر حيث يفتح AuthGate الشاشة الخاصة بنوع الحساب.
+        licenseNumber: _type == UserType.pharmacist ? _license.text : null,
+      ),
+      networkMessage: Msg.registerNetwork,
+      errorTitle: Msg.registerInvalid,
+    );
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (ok) {
+      showSnack(context, Msg.registerSuccess);
       Navigator.of(context).popUntil((r) => r.isFirst);
-    } catch (e) {
-      if (mounted) {
-        await showInvalidDataDialog(
-          context,
-          title: _type == UserType.pharmacist
-              ? Msg.invalidReenter
-              : Msg.invalidRetry,
-          reason: friendlyError(e),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final pharmacist = _type == UserType.pharmacist;
     return Scaffold(
       appBar: AppBar(title: const Text('إنشاء حساب جديد')),
       body: WaveBackground(
@@ -181,6 +179,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ],
                   ],
                 ),
+                if (pharmacist) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _license,
+                    textDirection: TextDirection.ltr,
+                    decoration: const InputDecoration(
+                      hintText: 'رقم ترخيص مزاولة المهنة',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                    ),
+                    validator: Validators.license,
+                  ),
+                ],
                 const SizedBox(height: 24),
                 LoadingButton(
                   label: 'إنشاء الحساب',

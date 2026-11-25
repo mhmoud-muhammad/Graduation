@@ -74,13 +74,4 @@ abstract final class TextUtils {
     final q = normalize(query);
     return q.length > maxKeyLength ? q.substring(0, maxKeyLength) : q;
   }
-
-  /// باركود: أرقام فقط.
-  static String normalizeBarcode(String input) =>
-      _toLatinDigits(input).replaceAll(RegExp(r'[^0-9]'), '');
-
-  static bool looksLikeBarcode(String input) {
-    final digits = normalizeBarcode(input);
-    return digits.length >= 6 && digits.length == input.trim().length;
-  }
 }

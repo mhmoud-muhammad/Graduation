@@ -19,7 +19,7 @@ class Services {
     medicines = MedicineRepository(db);
     location = LocationService();
     gemini = GeminiService();
-    search = SearchService(medicines, pharmacies, location);
+    search = SearchService(medicines, pharmacies);
   }
 
   static Services? _instance;

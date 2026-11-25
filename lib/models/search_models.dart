@@ -2,7 +2,7 @@ import 'availability.dart';
 import 'medicine.dart';
 import 'pharmacy.dart';
 
-/// صيدلية يتوفر فيها الدواء مع السعر والكمية والمسافة.
+/// صيدلية يتوفر فيها الدواء مع السعر والكمية والمسافة (إن توفر الموقع).
 class PharmacyOffer {
   const PharmacyOffer({
     required this.pharmacy,
@@ -21,30 +21,36 @@ class MedicineSearchResult {
 
   final Medicine medicine;
   final List<PharmacyOffer> offers;
-
-  double? get lowestPrice => offers.isEmpty
-      ? null
-      : offers.map((o) => o.availability.price).reduce((a, b) => a < b ? a : b);
 }
 
-/// المعلومات التي يستخرجها Gemini من صورة العبوة أو الروشتة.
+/// نتيجة البحث كاملة: الأدوية + هل رُتبت الصيدليات حسب القرب (FR-15).
+class SearchOutcome {
+  const SearchOutcome({required this.results, required this.sortedByDistance});
+
+  final List<MedicineSearchResult> results;
+  final bool sortedByDistance;
+
+  bool get isEmpty => results.isEmpty;
+  bool get noneAvailable => results.every((r) => r.offers.isEmpty);
+}
+
+/// المعلومات التي يستخرجها Gemini من صورة العبوة أو الروشتة (FR-13).
 class ImageAnalysis {
   const ImageAnalysis({
     required this.readable,
     this.tradeNames = const [],
     this.scientificNames = const [],
-    this.barcodes = const [],
+    this.forms = const [],
     this.note,
   });
 
   final bool readable;
   final List<String> tradeNames;
   final List<String> scientificNames;
-  final List<String> barcodes;
+  final List<String> forms;
   final String? note;
 
-  bool get isEmpty =>
-      tradeNames.isEmpty && scientificNames.isEmpty && barcodes.isEmpty;
+  bool get isEmpty => tradeNames.isEmpty && scientificNames.isEmpty;
 
   List<String> get allNames => {...tradeNames, ...scientificNames}.toList();
 
@@ -58,7 +64,7 @@ class ImageAnalysis {
       readable: j['readable'] != false,
       tradeNames: list('tradeNames'),
       scientificNames: list('scientificNames'),
-      barcodes: list('barcodes'),
+      forms: list('pharmaceuticalForms'),
       note: j['note'] as String?,
     );
   }
@@ -71,4 +77,11 @@ enum ImageKind {
 
   const ImageKind(this.label);
   final String label;
+}
+
+/// دواء في قائمة صيدلية (الدواء + سجل توفره: السعر والكمية).
+class StockItem {
+  const StockItem(this.medicine, this.availability);
+  final Medicine medicine;
+  final Availability availability;
 }

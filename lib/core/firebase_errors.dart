@@ -1,7 +1,41 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// تحويل أخطاء Firebase إلى رسائل عربية مفهومة.
+/// خطأ في التطبيق برسالة عربية جاهزة للعرض.
+class AppException implements Exception {
+  AppException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+
+/// تعذر الاتصال بالإنترنت أو بالخادم (NFR-06).
+class NetworkException extends AppException {
+  NetworkException([super.message = 'تعذر الاتصال بالإنترنت']);
+}
+
+/// هل الخطأ ناتج عن ضعف أو انقطاع الاتصال؟
+bool isNetworkError(Object e) {
+  if (e is NetworkException) return true;
+  if (e is TimeoutException || e is SocketException) return true;
+  if (e is FirebaseAuthException) {
+    return e.code == 'network-request-failed' || e.code == 'too-many-requests';
+  }
+  if (e is FirebaseException) {
+    return const {
+      'unavailable',
+      'deadline-exceeded',
+      'network-request-failed',
+    }.contains(e.code);
+  }
+  return false;
+}
+
+/// سبب تفصيلي يظهر تحت رسالة المخطط.
 String friendlyError(Object e) {
+  if (e is AppException) return e.message;
   if (e is FirebaseAuthException) {
     switch (e.code) {
       case 'invalid-email':
@@ -34,13 +68,8 @@ String friendlyError(Object e) {
     }
     return e.message ?? 'حدث خطأ في قاعدة البيانات';
   }
-  if (e is AppException) return e.message;
+  if (e is TimeoutException || e is SocketException) {
+    return 'تعذر الاتصال بالإنترنت';
+  }
   return 'حدث خطأ غير متوقع';
-}
-
-class AppException implements Exception {
-  AppException(this.message);
-  final String message;
-  @override
-  String toString() => message;
 }

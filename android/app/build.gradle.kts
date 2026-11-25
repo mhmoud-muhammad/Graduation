@@ -24,8 +24,8 @@ android {
 
     defaultConfig {
         applicationId = "com.zaha.dawai"
-        // Android 6.0 (API 23) فما فوق — المتطلب NFR-05
-        minSdk = maxOf(flutter.minSdkVersion, 23)
+        // Android 8.0 (API 26) فما فوق — المتطلب NFR-05
+        minSdk = maxOf(flutter.minSdkVersion, 26)
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)

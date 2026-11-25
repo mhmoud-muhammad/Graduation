@@ -41,12 +41,4 @@ void main() {
       expect(ar, contains(TextUtils.queryKey('اموك')));
     });
   });
-
-  group('barcode', () {
-    test('تمييز الباركود', () {
-      expect(TextUtils.looksLikeBarcode('6281012345678'), isTrue);
-      expect(TextUtils.looksLikeBarcode('panadol'), isFalse);
-      expect(TextUtils.normalizeBarcode('٦٢٨١٠١٢'), '6281012');
-    });
-  });
 }

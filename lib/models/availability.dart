@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// كيان توفر الأدوية (MedicineAvailability) — مجموعة `availability`.
 ///
-/// معرّف السجل = `{pharmacyId}_{medicineId}` لضمان سجل واحد لكل دواء
-/// في كل صيدلية.
+/// حلقة الوصل بين الدواء والصيدلية: السعر والكمية وتاريخ آخر تحديث.
+/// معرّف السجل = `{pharmacyId}_{medicineId}` (سجل واحد لكل دواء في كل صيدلية).
 class Availability {
   const Availability({
     required this.availabilityId,

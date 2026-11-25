@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -6,6 +7,7 @@ import 'package:firebase_ai/firebase_ai.dart';
 import '../core/app_config.dart';
 import '../core/firebase_errors.dart';
 import '../models/search_models.dart';
+import 'network_service.dart';
 
 /// تحليل صورة العبوة أو الروشتة باستخدام Gemini عبر Firebase AI Logic.
 ///
@@ -27,12 +29,12 @@ class GeminiService {
   "readable": true|false,
   "tradeNames": ["..."],
   "scientificNames": ["..."],
-  "barcodes": ["..."],
+  "pharmaceuticalForms": ["..."],
   "note": "ملاحظة قصيرة بالعربية"
 }
 - tradeNames: الأسماء التجارية كما تظهر (بالإنجليزية إن كانت مكتوبة بها).
 - scientificNames: المادة/المواد الفعالة (الاسم العلمي) بالإنجليزية.
-- barcodes: أرقام الباركود المقروءة فقط (أرقام بدون مسافات).
+- pharmaceuticalForms: الشكل الصيدلاني بالعربية إن ظهر (أقراص، كبسولات، شراب...).
 - اجعل readable=false إذا كانت الصورة غير واضحة أو لا تحتوي على دواء.
 - لا تخمّن أسماء غير ظاهرة في الصورة.''';
 
@@ -53,16 +55,21 @@ class GeminiService {
   }) async {
     final GenerateContentResponse response;
     try {
-      response = await _m.generateContent([
-        Content.multi([
-          TextPart(_prompt(kind)),
-          InlineDataPart(mimeType, bytes),
-        ]),
-      ]);
+      await Net.ensureOnline();
+      response = await _m
+          .generateContent([
+            Content.multi([
+              TextPart(_prompt(kind)),
+              InlineDataPart(mimeType, bytes),
+            ]),
+          ])
+          .timeout(const Duration(seconds: 45));
     } on FirebaseAIException catch (e) {
       throw AppException('تعذر تحليل الصورة: ${e.message}');
+    } on TimeoutException {
+      throw NetworkException();
     } catch (_) {
-      throw AppException('تعذر الاتصال بخدمة تحليل الصور، تحقق من الإنترنت');
+      throw NetworkException();
     }
     return parse(response.text);
   }

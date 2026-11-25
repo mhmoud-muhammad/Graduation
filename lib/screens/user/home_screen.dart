@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import '../../core/app_config.dart';
 import '../../core/app_theme.dart';
 import '../../models/app_user.dart';
-import '../../services/services.dart';
 import '../../widgets/common.dart';
 import '../../widgets/menu_card.dart';
+import '../auth/logout.dart';
 import 'image_search_screen.dart';
 import 'text_search_screen.dart';
 
-/// الواجهة الرئيسية للمستخدم العادي.
+/// الواجهة الرئيسية للمستخدم: البحث بالكتابة أو بالصورة وتسجيل الخروج.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.user});
   final AppUser user;
@@ -35,7 +35,7 @@ class HomeScreen extends StatelessWidget {
         top: false,
         color: AppColors.sky,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 140),
+          padding: const EdgeInsets.fromLTRB(22, 8, 22, 40),
           children: [
             Text(
               'مرحباً ${user.name.split(' ').first}',
@@ -67,11 +67,18 @@ class HomeScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const ImageSearchScreen()),
               ),
             ),
-            const SizedBox(height: 36),
+            const SizedBox(height: 30),
             const Icon(
               Icons.medication_liquid,
               size: 110,
               color: AppColors.primary,
+            ),
+            const SizedBox(height: 30),
+            // تسجيل الخروج أسفل خياري البحث (وصف حالة الاستخدام).
+            LoadingButton(
+              icon: Icons.logout,
+              label: 'تسجيل الخروج',
+              onPressed: () => confirmAndSignOut(context),
             ),
           ],
         ),
@@ -113,7 +120,7 @@ class _UserDrawer extends StatelessWidget {
             onTap: () => showAboutDialog(
               context: context,
               applicationName: AppConfig.appName,
-              applicationVersion: '1.0.0',
+              applicationVersion: '2.0.0',
               applicationIcon: const AppLogo(size: 48),
               children: const [
                 Text(
@@ -122,15 +129,6 @@ class _UserDrawer extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: AppColors.danger),
-            title: const Text('تسجيل الخروج'),
-            onTap: () async {
-              Navigator.pop(context);
-              await Services.I.auth.signOut();
-            },
           ),
         ],
       ),

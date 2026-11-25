@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
-import '../../core/firebase_errors.dart';
 import '../../core/messages.dart';
 import '../../core/validators.dart';
 import '../../services/services.dart';
@@ -30,26 +29,23 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  /// مخطط تسلسل تسجيل الدخول:
-  /// إدخال الإيميل والرقم السري ← النظام يتحقق من البيانات (Firebase Auth)
-  /// ← غير صحيحة: "البيانات غير صحيحة الرجاء إعادة الإدخال" ثم رجوع
-  /// ← صحيحة: النظام يفتح الشاشة الخاصة بالمستخدم أو الصيدلي (AuthGate).
+  /// تسلسل تسجيل الدخول: إدخال البريد وكلمة المرور ← الضغط على "دخول" ←
+  /// إرسال البيانات للتحقق منها عبر Firebase Authentication:
+  /// - ضعف الإنترنت: "تعذر تسجيل الدخول، الرجاء إعادة المحاولة عند توفر اتصال"
+  /// - بيانات غير صحيحة: "البيانات غير صحيحة، قم بتصحيحها" ويبقى في الشاشة
+  /// - صحيحة: يقرأ النظام نوع الحساب من users ويوجّه المستخدم إلى واجهة
+  ///   البحث والصيدلي إلى لوحة التحكم (AuthGate).
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
     setState(() => _loading = true);
-    try {
-      await Services.I.auth.signIn(_email.text, _password.text);
-    } catch (e) {
-      if (mounted) {
-        await showInvalidDataDialog(
-          context,
-          title: Msg.invalidReenter,
-          reason: friendlyError(e),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    await runWithRetry(
+      context,
+      () => Services.I.auth.signIn(_email.text, _password.text),
+      networkMessage: Msg.loginNetwork,
+      errorTitle: Msg.loginInvalid,
+    );
+    if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _forgotPassword() async {
@@ -57,13 +53,14 @@ class _LoginScreenState extends State<LoginScreen> {
       showSnack(context, 'أدخل بريدك الإلكتروني أولاً', error: true);
       return;
     }
-    try {
-      await Services.I.auth.sendPasswordReset(_email.text);
-      if (mounted) {
-        showSnack(context, 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك');
-      }
-    } catch (e) {
-      if (mounted) showSnack(context, friendlyError(e), error: true);
+    final ok = await runWithRetry(
+      context,
+      () => Services.I.auth.sendPasswordReset(_email.text),
+      networkMessage: Msg.operationNetwork,
+      errorTitle: 'تعذر إرسال رابط إعادة التعيين',
+    );
+    if (ok && mounted) {
+      showSnack(context, 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك');
     }
   }
 

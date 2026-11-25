@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// كيان الصيدليات (Pharmacies) — مجموعة `pharmacies/{pharmacyId}`.
 ///
-/// لكل صيدلي صيدلية واحدة، ويُستخدم معرّف الصيدلي نفسه كمعرّف للصيدلية
-/// لتسهيل قواعد الأمان، مع الاحتفاظ بالحقل ownerId كمفتاح أجنبي.
+/// علاقة «يدير» واحد إلى متعدد: الصيدلي الواحد قد يدير أكثر من صيدلية،
+/// وكل صيدلية يملكها صيدلي واحد يحدده الحقل [ownerId].
 class Pharmacy {
   const Pharmacy({
     required this.pharmacyId,
@@ -38,6 +38,17 @@ class Pharmacy {
       updatedAt: (d['updatedAt'] as Timestamp?)?.toDate(),
     );
   }
+
+  Pharmacy copyWith({String? pharmacyId}) => Pharmacy(
+    pharmacyId: pharmacyId ?? this.pharmacyId,
+    ownerId: ownerId,
+    pharmacyName: pharmacyName,
+    address: address,
+    phone: phone,
+    latitude: latitude,
+    longitude: longitude,
+    updatedAt: updatedAt,
+  );
 
   Map<String, dynamic> toMap() => {
     'pharmacyId': pharmacyId,

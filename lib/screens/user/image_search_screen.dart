@@ -1,22 +1,20 @@
 import 'dart:typed_data';
 
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_theme.dart';
-import '../../core/firebase_errors.dart';
 import '../../core/messages.dart';
 import '../../models/search_models.dart';
+import '../../services/search_service.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
-import 'search_results_screen.dart';
+import 'search_flow.dart';
 import 'text_search_screen.dart';
 
-/// واجهة البحث بالصورة (FR-05, FR-06, FR-07).
+/// واجهة البحث بالصورة (FR-05, FR-06, FR-07, FR-13).
 ///
-/// يختار المستخدم صورة عبوة أو روشتة من المعرض أو يلتقط صورة بالكاميرا،
-/// فتُرسل إلى Gemini لاستخراج الأسماء/الباركود ثم يتم البحث في قاعدة البيانات.
-/// لا يتم حفظ الصورة.
+/// الصورة تُرسل لخدمة Gemini للتحليل فقط ولا تُحفظ.
 class ImageSearchScreen extends StatefulWidget {
   const ImageSearchScreen({super.key});
 
@@ -32,7 +30,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
   bool _loading = false;
   String _status = '';
   ImageAnalysis? _analysis;
-  bool _noMatch = false;
+  bool _notAvailable = false;
 
   Future<void> _pick(ImageSource source) async {
     try {
@@ -52,7 +50,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
                 ? 'image/png'
                 : 'image/jpeg');
         _analysis = null;
-        _noMatch = false;
+        _notAvailable = false;
       });
       await _analyze();
     } catch (_) {
@@ -66,11 +64,14 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
     }
   }
 
-  /// مخطط تسلسل البحث بالصورة: اختيار صورة الدواء من المعرض أو التقاطها
-  /// بالكاميرا ← إرسال الصورة للتحليل ← (تحليل بيانات الصورة: Gemini) معالجة
-  /// الصورة واستخراج اسم الدواء ← البحث عن الدواء بالاسم المستخرج
-  /// ← إرجاع بيانات الدواء ← عرض نتائج البحث والصيدليات المتوفر فيها
-  /// وموقعها والسعر والكمية.
+  /// تسلسل البحث بالصورة: رفع صورة الدواء أو الروشتة من المعرض أو تصويرها
+  /// بالكاميرا ←
+  /// - ضعف الإنترنت: "تعثرت العملية بسبب ضعف الإنترنت، الرجاء المحاولة"
+  /// - إرسال الصورة إلى Gemini: غير واضحة ← "الصورة غير واضحة، قم بتحميل
+  ///   صورة أوضح"
+  /// - إرجاع معلومات الدواء والشكل الصيدلاني ← البحث في medicines:
+  ///   غير موجود ← "الدواء غير متوفر"
+  /// - موجود ← الاستعلام عن التوفر في availability ← طلب إذن الموقع ← العرض.
   Future<void> _analyze() async {
     final bytes = _bytes;
     if (bytes == null) return;
@@ -78,36 +79,32 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
       _loading = true;
       _status = 'جاري تحليل الصورة...';
     });
-    try {
-      final analysis = await Services.I.gemini.analyze(
-        bytes,
-        kind: _kind,
-        mimeType: _mime,
-      );
-      if (!mounted) return;
-      setState(() => _analysis = analysis);
-      if (!analysis.readable || analysis.isEmpty) return;
-
-      setState(() => _status = 'جاري البحث عن الدواء...');
-      final results = await Services.I.search.searchAnalysis(analysis);
-      if (!mounted) return;
-      if (results.isEmpty) {
-        setState(() => _noMatch = true);
-        return;
-      }
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => SearchResultsScreen(
-            results: results,
-            query: analysis.allNames.join('، '),
-          ),
-        ),
-      );
-    } catch (e) {
-      if (mounted) showSnack(context, friendlyError(e), error: true);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    ImageAnalysis? analysis;
+    RawSearch? raw;
+    await runWithRetry(
+      context,
+      () async {
+        analysis = await Services.I.gemini.analyze(
+          bytes,
+          kind: _kind,
+          mimeType: _mime,
+        );
+        if (!analysis!.readable || analysis!.isEmpty) return;
+        if (mounted) setState(() => _status = 'جاري البحث عن الدواء...');
+        raw = await Services.I.search.findByAnalysis(analysis!);
+      },
+      networkMessage: Msg.imageNetwork,
+      errorTitle: 'تعذر تحليل الصورة',
+    );
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _analysis = analysis;
+      _notAvailable = raw != null && raw!.isEmpty;
+    });
+    final r = raw;
+    if (r == null || r.isEmpty) return;
+    await showSearchResults(context, r, query: analysis!.allNames.join('، '));
   }
 
   void _searchByName(String name) {
@@ -150,7 +147,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
             Text(
               _loading
                   ? _status
-                  : 'سنقوم بتحديد الدواء وعرض الصيدليات والأسعار المتاحة',
+                  : 'سنقوم بتحديد الدواء وعرض التفاصيل والأسعار المتاحة',
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.muted),
             ),
@@ -158,7 +155,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
               const SizedBox(height: 12),
               _AnalysisCard(
                 analysis: a,
-                noMatch: _noMatch,
+                notAvailable: _notAvailable,
                 onSearchName: _searchByName,
               ),
             ],
@@ -166,21 +163,19 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
             LoadingButton(
               icon: Icons.photo_library_outlined,
               label: 'اختيار صورة من المعرض',
-              loading: false,
               onPressed: _loading ? null : () => _pick(ImageSource.gallery),
             ),
             const SizedBox(height: 12),
             LoadingButton(
               icon: Icons.photo_camera_outlined,
               label: 'التقاط صورة بالكاميرا',
-              loading: false,
               onPressed: _loading ? null : () => _pick(ImageSource.camera),
             ),
             if (_bytes != null && !_loading) ...[
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 icon: const Icon(Icons.refresh),
-                label: const Text('إعادة التحليل'),
+                label: const Text(Msg.retry),
                 onPressed: _analyze,
               ),
             ],
@@ -251,12 +246,12 @@ class _PreviewBox extends StatelessWidget {
 class _AnalysisCard extends StatelessWidget {
   const _AnalysisCard({
     required this.analysis,
-    required this.noMatch,
+    required this.notAvailable,
     required this.onSearchName,
   });
 
   final ImageAnalysis analysis;
-  final bool noMatch;
+  final bool notAvailable;
   final ValueChanged<String> onSearchName;
 
   @override
@@ -266,13 +261,8 @@ class _AnalysisCard extends StatelessWidget {
         color: const Color(0xFFFFF4E5),
         child: ListTile(
           leading: const Icon(Icons.blur_on, color: Colors.orange),
-          title: const Text('الصورة غير واضحة'),
-          subtitle: Text(analysis.note ?? Msg.imageNotRecognized),
-          trailing: IconButton(
-            icon: const Icon(Icons.keyboard_alt_outlined),
-            tooltip: 'البحث بالكتابة',
-            onPressed: () => onSearchName(''),
-          ),
+          title: const Text(Msg.imageUnclear),
+          subtitle: analysis.note == null ? null : Text(analysis.note!),
         ),
       );
     }
@@ -283,12 +273,12 @@ class _AnalysisCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              noMatch
-                  ? 'تم التعرف على الصورة لكن الدواء غير مسجل في أي صيدلية'
+              notAvailable
+                  ? Msg.medicineNotAvailable
                   : 'المعلومات المستخرجة من الصورة',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppColors.navy,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: notAvailable ? AppColors.danger : AppColors.navy,
               ),
             ),
             const SizedBox(height: 8),
@@ -302,18 +292,18 @@ class _AnalysisCard extends StatelessWidget {
                     label: Text(n),
                     onPressed: () => onSearchName(n),
                   ),
-                for (final b in analysis.barcodes)
+                for (final f in analysis.forms)
                   Chip(
-                    avatar: const Icon(Icons.qr_code, size: 18),
-                    label: Text(b),
+                    avatar: const Icon(Icons.category_outlined, size: 18),
+                    label: Text(f),
                   ),
               ],
             ),
-            if (noMatch)
+            if (notAvailable)
               const Padding(
                 padding: EdgeInsets.only(top: 8),
                 child: Text(
-                  'اضغط على أي اسم لتعديله والبحث عنه يدوياً.',
+                  'اضغط على أي اسم لتعديله والبحث عنه بالكتابة.',
                   style: TextStyle(color: AppColors.muted),
                 ),
               ),

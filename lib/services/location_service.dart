@@ -1,22 +1,29 @@
 import 'package:geolocator/geolocator.dart';
 
-/// الحصول على موقع المستخدم وحساب المسافات (Geolocator).
+/// موقع المستخدم وحساب المسافات (Geolocator).
+///
+/// يُستخدم الموقع وقت البحث فقط لحساب المسافة ولا يُخزَّن (NFR-07).
 class LocationService {
   Position? _last;
-
   Position? get lastKnown => _last;
 
-  /// يعيد الموقع الحالي أو null إذا رفض المستخدم الإذن أو كانت الخدمة مغلقة.
-  Future<Position?> current({bool requestPermission = true}) async {
+  /// هل سبق أن منح المستخدم إذن الموقع؟
+  Future<bool> hasPermission() async {
+    final p = await Geolocator.checkPermission();
+    return p == LocationPermission.always || p == LocationPermission.whileInUse;
+  }
+
+  /// يطلب إذن النظام ثم يعيد الموقع، أو null عند الرفض أو إغلاق الخدمة.
+  Future<Position?> requestAndGet() async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) return _last;
+      if (!await Geolocator.isLocationServiceEnabled()) return null;
       var perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied && requestPermission) {
+      if (perm == LocationPermission.denied) {
         perm = await Geolocator.requestPermission();
       }
       if (perm == LocationPermission.denied ||
           perm == LocationPermission.deniedForever) {
-        return _last;
+        return null;
       }
       _last = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -26,7 +33,7 @@ class LocationService {
       );
       return _last;
     } catch (_) {
-      return _last ?? await Geolocator.getLastKnownPosition();
+      return await Geolocator.getLastKnownPosition();
     }
   }
 

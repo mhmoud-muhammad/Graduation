@@ -1,15 +1,20 @@
 import '../models/search_models.dart';
 
-/// ترتيب الصيدليات: الأقرب أولاً عند توفر موقع المستخدم، وإلا الأرخص.
-/// الصيدليات التي نفدت كميتها لا تُعرض.
-List<PharmacyOffer> rankOffers(Iterable<PharmacyOffer> offers) {
+/// يستبعد الصيدليات التي نفدت كميتها. عند توفر موقع المستخدم تُرتب حسب
+/// الأقرب، وعند رفض الإذن تُعرض كما هي دون ترتيب حسب القرب (FR-15).
+List<PharmacyOffer> rankOffers(
+  Iterable<PharmacyOffer> offers, {
+  required bool byDistance,
+}) {
   final list = offers.where((o) => o.availability.inStock).toList();
-  list.sort((a, b) {
-    final da = a.distanceKm, db = b.distanceKm;
-    if (da != null && db != null && da != db) return da.compareTo(db);
-    if (da != null && db == null) return -1;
-    if (da == null && db != null) return 1;
-    return a.availability.price.compareTo(b.availability.price);
-  });
+  if (byDistance) {
+    list.sort((a, b) {
+      final da = a.distanceKm, db = b.distanceKm;
+      if (da == null && db == null) return 0;
+      if (da == null) return 1;
+      if (db == null) return -1;
+      return da.compareTo(db);
+    });
+  }
   return list;
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
-import '../../core/firebase_errors.dart';
+import '../../core/messages.dart';
+import '../../services/search_service.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
 import 'image_search_screen.dart';
-import 'search_results_screen.dart';
+import 'search_flow.dart';
 
 /// واجهة البحث بالكتابة (FR-04).
 class TextSearchScreen extends StatefulWidget {
@@ -37,10 +38,12 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
     super.dispose();
   }
 
-  /// مخطط تسلسل البحث بالكتابة: إدخال الاسم التجاري أو العلمي ← إرسال اسم
-  /// الدواء للبحث ← البحث عن الدواء في medicines ← البحث عنها في availability
-  /// ← بيانات الصيدليات المتوفر فيها الدواء ← عرض اسم الصيدلية والموقع
-  /// والكمية والسعر.
+  /// تسلسل البحث بالكتابة: إدخال الاسم التجاري أو العلمي والضغط على بحث ←
+  /// إرسال اسم الدواء للتحقق منه في قاعدة البيانات:
+  /// - ضعف الإنترنت: "تعثرت العملية، الرجاء إعادة المحاولة عند توفر الاتصال"
+  /// - غير موجود في medicines: "الدواء غير متوفر"
+  /// - موجود: البحث عنه في availability ← بيانات الصيدليات مع السعر والكمية
+  ///   والموقع والشكل الصيدلاني ← طلب إذن الموقع ← العرض.
   Future<void> _search() async {
     final q = _query.text.trim();
     if (q.length < 2) {
@@ -52,23 +55,22 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
       _loading = true;
       _notFoundFor = null;
     });
-    try {
-      final results = await Services.I.search.searchText(q);
-      if (!mounted) return;
-      if (results.isEmpty) {
-        setState(() => _notFoundFor = q);
-      } else {
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => SearchResultsScreen(results: results, query: q),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) showSnack(context, friendlyError(e), error: true);
-    } finally {
-      if (mounted) setState(() => _loading = false);
+    RawSearch? raw;
+    await runWithRetry(
+      context,
+      () async => raw = await Services.I.search.findByText(q),
+      networkMessage: Msg.searchNetwork,
+      errorTitle: 'تعذر البحث',
+    );
+    if (!mounted) return;
+    setState(() => _loading = false);
+    final r = raw;
+    if (r == null) return;
+    if (r.isEmpty) {
+      setState(() => _notFoundFor = q);
+      return;
     }
+    await showSearchResults(context, r, query: q);
   }
 
   @override
@@ -94,16 +96,17 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
             LoadingButton(label: 'بحث', loading: _loading, onPressed: _search),
             const SizedBox(height: 12),
             const Text(
-              'يمكنك كتابة جزء من الاسم مثل: "بارا" أو "panadol" أو رقم الباركود.',
+              'يمكنك كتابة جزء من الاسم مثل: "بارا" أو "panadol".',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted),
             ),
             if (_notFoundFor != null)
               EmptyState(
                 icon: Icons.search_off,
-                title: 'لم يتم العثور على "$_notFoundFor"',
+                title: Msg.medicineNotAvailable,
                 message:
-                    'تأكد من كتابة الاسم بشكل صحيح، أو جرّب البحث بصورة العبوة.',
+                    'لم يتم العثور على "$_notFoundFor". تأكد من كتابة الاسم '
+                    'أو جرّب البحث بالصورة.',
                 action: OutlinedButton.icon(
                   icon: const Icon(Icons.photo_camera_outlined),
                   label: const Text('البحث بالصورة'),

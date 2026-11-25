@@ -14,6 +14,8 @@ enum UserType {
 }
 
 /// كيان المستخدمين (Users) — مجموعة `users/{userId}`.
+///
+/// لا تُخزَّن كلمة المرور هنا؛ تتولاها Firebase Authentication (NFR-03).
 class AppUser {
   const AppUser({
     required this.userId,
@@ -21,6 +23,7 @@ class AppUser {
     required this.email,
     required this.userType,
     this.phone,
+    this.licenseNumber,
     this.createdAt,
   });
 
@@ -29,6 +32,9 @@ class AppUser {
   final String email;
   final String? phone;
   final UserType userType;
+
+  /// رقم ترخيص مزاولة المهنة (للصيدلي فقط — FR-01).
+  final String? licenseNumber;
   final DateTime? createdAt;
 
   bool get isPharmacist => userType == UserType.pharmacist;
@@ -41,6 +47,7 @@ class AppUser {
       email: (d['email'] as String?) ?? '',
       phone: d['phone'] as String?,
       userType: UserType.fromValue(d['userType'] as String?),
+      licenseNumber: d['licenseNumber'] as String?,
       createdAt: (d['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -51,6 +58,7 @@ class AppUser {
     'email': email,
     'phone': (phone == null || phone!.isEmpty) ? null : phone,
     'userType': userType.value,
+    if (isPharmacist) 'licenseNumber': licenseNumber,
     'createdAt': FieldValue.serverTimestamp(),
   };
 }

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../core/firebase_errors.dart';
 import '../core/messages.dart';
 
 /// خلفية بموجات زرقاء كما في التصميم.
@@ -258,9 +259,8 @@ class FieldLabel extends StatelessWidget {
   );
 }
 
-/// رسالة "البيانات غير صحيحة" مع زر "رجوع" للعودة وإعادة الإدخال
-/// (الخطوة "رجوع()" في مخططات تسلسل الدخول وإنشاء الحساب).
-Future<void> showInvalidDataDialog(
+/// رسالة خطأ بنص المخطط مع زر "رجوع" للعودة وتصحيح البيانات.
+Future<void> showErrorDialog(
   BuildContext context, {
   required String title,
   String? reason,
@@ -270,7 +270,7 @@ Future<void> showInvalidDataDialog(
     builder: (ctx) => AlertDialog(
       icon: const Icon(Icons.error_outline, color: AppColors.danger, size: 40),
       title: Text(title, textAlign: TextAlign.center),
-      content: reason == null
+      content: reason == null || reason == title
           ? null
           : Text(
               reason,
@@ -287,6 +287,61 @@ Future<void> showInvalidDataDialog(
       ],
     ),
   );
+}
+
+/// رسالة ضعف الاتصال مع زر "إعادة المحاولة" (NFR-06). تعيد true للإعادة.
+Future<bool> showRetryDialog(BuildContext context, String message) async {
+  final again = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      icon: const Icon(Icons.wifi_off, color: AppColors.danger, size: 40),
+      title: Text(message, textAlign: TextAlign.center),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text(Msg.cancel),
+        ),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(minimumSize: const Size(150, 46)),
+          icon: const Icon(Icons.refresh),
+          label: const Text(Msg.retry),
+          onPressed: () => Navigator.pop(ctx, true),
+        ),
+      ],
+    ),
+  );
+  return again ?? false;
+}
+
+/// ينفذ [action] كما في مخططات التسلسل: عند ضعف الاتصال تظهر [networkMessage]
+/// مع "إعادة المحاولة"، وعند أي خطأ آخر تظهر [errorTitle] مع السبب.
+/// تعيد true عند النجاح.
+Future<bool> runWithRetry(
+  BuildContext context,
+  Future<void> Function() action, {
+  required String networkMessage,
+  required String errorTitle,
+}) async {
+  while (true) {
+    try {
+      await action();
+      return true;
+    } catch (e) {
+      if (!context.mounted) return false;
+      if (isNetworkError(e)) {
+        final again = await showRetryDialog(context, networkMessage);
+        if (again && context.mounted) continue;
+        return false;
+      }
+      await showErrorDialog(
+        context,
+        title: errorTitle,
+        reason: friendlyError(e),
+      );
+      return false;
+    }
+  }
 }
 
 void showSnack(BuildContext context, String message, {bool error = false}) {

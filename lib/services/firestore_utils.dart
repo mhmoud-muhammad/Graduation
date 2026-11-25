@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// الحد الأقصى لعناصر عامل whereIn في Firestore.
 const int whereInLimit = 30;
 
+/// القراءة من الخادم مباشرة حتى لا تُعرض بيانات قديمة من الذاكرة المحلية.
+const serverOnly = GetOptions(source: Source.server);
+
 Iterable<List<T>> chunked<T>(List<T> items, [int size = whereInLimit]) sync* {
   for (var i = 0; i < items.length; i += size) {
     yield items.sublist(i, i + size > items.length ? items.length : i + size);
@@ -17,9 +20,9 @@ Future<List<DocumentSnapshot<Map<String, dynamic>>>> fetchByIds(
   final unique = ids.toSet().toList();
   if (unique.isEmpty) return const [];
   final snaps = await Future.wait(
-    chunked(
-      unique,
-    ).map((part) => col.where(FieldPath.documentId, whereIn: part).get()),
+    chunked(unique).map(
+      (part) => col.where(FieldPath.documentId, whereIn: part).get(serverOnly),
+    ),
   );
   return [for (final s in snaps) ...s.docs];
 }

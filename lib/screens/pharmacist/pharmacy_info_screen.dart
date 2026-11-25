@@ -1,24 +1,27 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/app_config.dart';
 import '../../core/app_theme.dart';
-import '../../core/firebase_errors.dart';
 import '../../core/messages.dart';
 import '../../core/validators.dart';
 import '../../models/app_user.dart';
 import '../../models/pharmacy.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
-import 'medicines_screen.dart';
 
-/// واجهة بيانات الصيدلية (FR-08): الاسم والعنوان والهاتف والموقع الجغرافي.
+/// واجهة بيانات الصيدلية (FR-08): الاسم والعنوان والهاتف والموقع الجغرافي
+/// (خط الطول والعرض)، مع زر "تسجيل" لصيدلية جديدة وزر "تعديل" للحالية.
+///
+/// تعيد الصيدلية المحفوظة عند الرجوع.
 class PharmacyInfoScreen extends StatefulWidget {
   const PharmacyInfoScreen({super.key, required this.owner, this.pharmacy});
 
   final AppUser owner;
+
+  /// الصيدلية الحالية (null إذا لم يسجّل الصيدلي أي صيدلية بعد).
   final Pharmacy? pharmacy;
 
   @override
@@ -50,12 +53,6 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.pharmacy == null) _useMyLocation(silent: true);
-  }
-
-  @override
   void dispose() {
     for (final c in [_name, _address, _phone, _lat, _lng]) {
       c.dispose();
@@ -72,35 +69,40 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
     if (moveCamera) _map?.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
   }
 
-  Future<void> _useMyLocation({bool silent = false}) async {
+  Future<void> _useMyLocation() async {
     setState(() => _locating = true);
-    final pos = await Services.I.location.current();
+    final pos = await Services.I.location.requestAndGet();
     if (!mounted) return;
     setState(() => _locating = false);
     if (pos == null) {
-      if (!silent) {
-        showSnack(
-          context,
-          'تعذر تحديد الموقع، فعّل خدمة الموقع وامنح الإذن للتطبيق',
-          error: true,
-        );
-      }
+      showSnack(
+        context,
+        'تعذر تحديد الموقع، فعّل خدمة الموقع وامنح الإذن أو اضغط على الخريطة',
+        error: true,
+      );
       return;
     }
     _setPoint(LatLng(pos.latitude, pos.longitude));
   }
 
-  /// مخطط تسلسل الصيدلي (1): إدخال اسم الصيدلية والعنوان والهاتف وتحديد
-  /// الموقع ← قم بحفظ البيانات ← حفظ في مجموعة pharmacies
-  /// ← "تم حفظ بيانات الصيدلية".
-  /// ومخطط النشاط: بعد تسجيل بيانات الصيدلية لأول مرة ينتقل الصيدلي إلى
-  /// إضافة بيانات الأدوية ثم تحديثها.
-  Future<void> _save() async {
-    if (!_form.currentState!.validate()) return;
+  /// تسلسل حفظ / تعديل بيانات الصيدلية: إدخال البيانات ← الضغط على
+  /// "تسجيل" أو "تعديل" ← التحقق من اكتمال البيانات وصحتها:
+  /// - ضعف الإنترنت: "تعذرت العملية، الرجاء إعادة المحاولة عند توفر اتصال"
+  /// - غير مكتملة: رسالة "الرجاء تصحيح البيانات" دون حفظ
+  /// - صحيحة: حفظ البيانات في pharmacies ← "تم الحفظ بنجاح".
+  Future<void> _save({required bool isNew}) async {
+    final valid = _form.currentState!.validate() && _point != null;
+    if (!valid) {
+      await showErrorDialog(
+        context,
+        title: isNew ? Msg.invalidOrIncomplete : Msg.incomplete,
+        reason: _point == null ? Msg.pickLocation : null,
+      );
+      return;
+    }
     final p = _point!;
-    final firstTime = widget.pharmacy == null;
-    final pharmacy = Pharmacy(
-      pharmacyId: widget.owner.userId,
+    final data = Pharmacy(
+      pharmacyId: isNew ? '' : widget.pharmacy!.pharmacyId,
       ownerId: widget.owner.userId,
       pharmacyName: _name.text.trim(),
       address: _address.text,
@@ -109,30 +111,32 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
       longitude: p.longitude,
     );
     setState(() => _saving = true);
-    try {
-      await Services.I.pharmacies.save(pharmacy);
-      if (!mounted) return;
-      showSnack(context, Msg.pharmacySaved);
-      if (firstTime) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) =>
-                MedicinesScreen(pharmacy: pharmacy, openAddFirst: true),
-          ),
-        );
-      } else {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) showSnack(context, friendlyError(e), error: true);
-    } finally {
-      if (mounted) setState(() => _saving = false);
+    Pharmacy? saved;
+    final ok = await runWithRetry(
+      context,
+      () async {
+        if (isNew) {
+          saved = await Services.I.pharmacies.create(data);
+        } else {
+          await Services.I.pharmacies.update(data);
+          saved = data;
+        }
+      },
+      networkMessage: Msg.operationNetwork,
+      errorTitle: Msg.invalidOrIncomplete,
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
+    if (ok) {
+      showSnack(context, Msg.savedSuccess);
+      Navigator.pop(context, saved);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final point = _point;
+    final hasPharmacy = widget.pharmacy != null;
     return Scaffold(
       appBar: AppBar(
         title: const Text('بيانات الصيدلية'),
@@ -206,7 +210,6 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
                   },
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: true,
-                  // يسمح بتحريك الخريطة داخل القائمة القابلة للتمرير.
                   gestureRecognizers: {
                     Factory<OneSequenceGestureRecognizer>(
                       EagerGestureRecognizer.new,
@@ -261,10 +264,17 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
             ),
             const SizedBox(height: 22),
             LoadingButton(
-              icon: Icons.save_outlined,
-              label: 'حفظ التعديلات',
+              icon: Icons.add_business_outlined,
+              label: 'تسجيل',
               loading: _saving,
-              onPressed: _save,
+              onPressed: () => _save(isNew: true),
+            ),
+            const SizedBox(height: 12),
+            LoadingButton(
+              icon: Icons.edit_outlined,
+              label: 'تعديل',
+              loading: _saving,
+              onPressed: hasPharmacy ? () => _save(isNew: false) : null,
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -275,9 +285,19 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.my_location),
-              label: const Text('تحديد موقعي الحالي على الخريطة'),
+              label: const Text('تحديد الموقع على الخريطة'),
               onPressed: _locating ? null : _useMyLocation,
             ),
+            if (hasPharmacy)
+              const Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Text(
+                  '"تسجيل" يضيف صيدلية جديدة بهذه البيانات، و"تعديل" يحدّث '
+                  'بيانات الصيدلية الحالية.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
+                ),
+              ),
           ],
         ),
       ),
