@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
-import '../../core/text_utils.dart';
 import '../../models/availability.dart';
 import '../../models/medicine.dart';
 import '../../models/pharmacy.dart';
@@ -30,7 +29,6 @@ class MyMedicinesScreen extends StatefulWidget {
 }
 
 class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
-  final _filter = TextEditingController();
   final Map<String, Medicine> _cache = {};
   late final Stream<List<Availability>> _stream = widget.itemsSource != null
       ? Stream.value([for (final i in widget.itemsSource!) i.availability])
@@ -42,12 +40,6 @@ class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
     for (final i in widget.itemsSource ?? const <StockItem>[]) {
       _cache[i.medicine.medicineId] = i.medicine;
     }
-  }
-
-  @override
-  void dispose() {
-    _filter.dispose();
-    super.dispose();
   }
 
   Future<List<StockItem>> _resolve(List<Availability> stock) async {
@@ -67,16 +59,6 @@ class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
     );
   }
 
-  List<StockItem> _applyFilter(List<StockItem> items) {
-    final q = TextUtils.normalize(_filter.text);
-    if (q.isEmpty) return items;
-    return items.where((i) {
-      final m = i.medicine;
-      return TextUtils.normalize(m.tradeName).contains(q) ||
-          TextUtils.normalize(m.scientificName).contains(q);
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,17 +70,6 @@ class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
             subtitle: widget.pharmacy.pharmacyName,
             backStyle: BackStyle.circle,
             titleSize: 30,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
-            child: TextField(
-              controller: _filter,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                hintText: 'ابحث في أدوية الصيدلية...',
-                prefixIcon: Icon(Icons.search),
-              ),
-            ),
           ),
           Expanded(
             child: StreamBuilder<List<Availability>>(
@@ -128,7 +99,7 @@ class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
                         message: 'أضف الأدوية من "إضافة دواء" في لوحة الصيدلي.',
                       );
                     }
-                    final items = _applyFilter(all);
+                    final items = all;
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(18, 4, 18, 30),
                       itemCount: items.length + 1,
