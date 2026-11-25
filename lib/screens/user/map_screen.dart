@@ -7,6 +7,7 @@ import '../../core/formatters.dart';
 import '../../core/launchers.dart';
 import '../../models/search_models.dart';
 import '../../services/services.dart';
+import '../../widgets/app_map.dart';
 
 /// واجهة الخريطة: مواقع الصيدليات المتوفر فيها الدواء وموقع المستخدم.
 class MapScreen extends StatefulWidget {
@@ -104,18 +105,21 @@ class _MapScreenState extends State<MapScreen> {
       ),
       body: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: _initialTarget,
-              zoom: 14,
+          appMap(
+            _markers,
+            () => GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _initialTarget,
+                zoom: 14,
+              ),
+              markers: _markers,
+              myLocationEnabled: Services.I.location.lastKnown != null,
+              myLocationButtonEnabled: true,
+              onMapCreated: (c) {
+                _controller = c;
+                _fitAll();
+              },
             ),
-            markers: _markers,
-            myLocationEnabled: Services.I.location.lastKnown != null,
-            myLocationButtonEnabled: true,
-            onMapCreated: (c) {
-              _controller = c;
-              _fitAll();
-            },
           ),
           if (_selected != null)
             Positioned(

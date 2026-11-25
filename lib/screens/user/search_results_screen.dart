@@ -224,11 +224,11 @@ class _OfferCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = offer.pharmacy;
     final a = offer.availability;
-    final line = [
+    final line1 = [
       if (offer.distanceKm != null) Fmt.distance(offer.distanceKm),
       'السعر ${Fmt.price(a.price)}',
-      'الكمية: ${a.quantity}',
     ].join(' • ');
+    final line2 = 'الكمية: ${a.quantity} • الشكل الصيدلاني: $form';
     const sub = TextStyle(color: Color(0xFF1A1F36), fontSize: 14.5);
     return Card(
       child: InkWell(
@@ -263,7 +263,7 @@ class _OfferCard extends StatelessWidget {
                           color: AppColors.header,
                         ),
                         const SizedBox(width: 3),
-                        Expanded(child: Text(line, style: sub)),
+                        Expanded(child: Text(line1, style: sub)),
                       ],
                     ),
                     Row(
@@ -274,7 +274,7 @@ class _OfferCard extends StatelessWidget {
                           color: AppColors.header,
                         ),
                         const SizedBox(width: 3),
-                        Text('الشكل الصيدلاني: $form', style: sub),
+                        Expanded(child: Text(line2, style: sub)),
                       ],
                     ),
                     if (p.address != null)

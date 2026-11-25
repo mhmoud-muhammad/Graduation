@@ -14,8 +14,16 @@ import 'update_medicine_screen.dart';
 /// واجهة أدوية صيدليتي (FR-12): الأدوية المتوفرة في الصيدلية باسمها التجاري
 /// والعلمي وأسعارها وكمياتها وأشكالها الصيدلانية.
 class MyMedicinesScreen extends StatefulWidget {
-  const MyMedicinesScreen({super.key, required this.pharmacy});
+  const MyMedicinesScreen({
+    super.key,
+    required this.pharmacy,
+    this.itemsSource,
+  });
   final Pharmacy pharmacy;
+
+  /// أدوية جاهزة بديلة عن Firestore (للمعاينة والاختبار فقط).
+  @visibleForTesting
+  final List<StockItem>? itemsSource;
 
   @override
   State<MyMedicinesScreen> createState() => _MyMedicinesScreenState();
@@ -24,8 +32,17 @@ class MyMedicinesScreen extends StatefulWidget {
 class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
   final _filter = TextEditingController();
   final Map<String, Medicine> _cache = {};
-  late final Stream<List<Availability>> _stream = Services.I.medicines
-      .watchPharmacyStock(widget.pharmacy.pharmacyId);
+  late final Stream<List<Availability>> _stream = widget.itemsSource != null
+      ? Stream.value([for (final i in widget.itemsSource!) i.availability])
+      : Services.I.medicines.watchPharmacyStock(widget.pharmacy.pharmacyId);
+
+  @override
+  void initState() {
+    super.initState();
+    for (final i in widget.itemsSource ?? const <StockItem>[]) {
+      _cache[i.medicine.medicineId] = i.medicine;
+    }
+  }
 
   @override
   void dispose() {

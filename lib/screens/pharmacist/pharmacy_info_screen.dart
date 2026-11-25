@@ -10,6 +10,7 @@ import '../../core/validators.dart';
 import '../../models/app_user.dart';
 import '../../models/pharmacy.dart';
 import '../../services/services.dart';
+import '../../widgets/app_map.dart';
 import '../../widgets/common.dart';
 
 /// واجهة بيانات الصيدلية (FR-08): الاسم والعنوان والهاتف والموقع الجغرافي
@@ -275,38 +276,47 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
                       borderRadius: BorderRadius.circular(16),
                       child: SizedBox(
                         height: 200,
-                        child: GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target:
-                                point ??
-                                const LatLng(
-                                  AppConfig.defaultLat,
-                                  AppConfig.defaultLng,
-                                ),
-                            zoom: point == null ? 13 : 16,
-                          ),
-                          onMapCreated: (c) => _map = c,
-                          onTap: (p) => _setPoint(p, moveCamera: false),
-                          markers: {
+                        child: appMap(
+                          {
                             if (point != null)
                               Marker(
                                 markerId: const MarkerId('pharmacy'),
                                 position: point,
-                                draggable: true,
-                                onDragEnd: (p) =>
-                                    _setPoint(p, moveCamera: false),
-                                infoWindow: const InfoWindow(
-                                  title: 'موقع الصيدلية',
-                                ),
                               ),
                           },
-                          myLocationButtonEnabled: false,
-                          zoomControlsEnabled: true,
-                          gestureRecognizers: {
-                            Factory<OneSequenceGestureRecognizer>(
-                              EagerGestureRecognizer.new,
+                          () => GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target:
+                                  point ??
+                                  const LatLng(
+                                    AppConfig.defaultLat,
+                                    AppConfig.defaultLng,
+                                  ),
+                              zoom: point == null ? 13 : 16,
                             ),
-                          },
+                            onMapCreated: (c) => _map = c,
+                            onTap: (p) => _setPoint(p, moveCamera: false),
+                            markers: {
+                              if (point != null)
+                                Marker(
+                                  markerId: const MarkerId('pharmacy'),
+                                  position: point,
+                                  draggable: true,
+                                  onDragEnd: (p) =>
+                                      _setPoint(p, moveCamera: false),
+                                  infoWindow: const InfoWindow(
+                                    title: 'موقع الصيدلية',
+                                  ),
+                                ),
+                            },
+                            myLocationButtonEnabled: false,
+                            zoomControlsEnabled: true,
+                            gestureRecognizers: {
+                              Factory<OneSequenceGestureRecognizer>(
+                                EagerGestureRecognizer.new,
+                              ),
+                            },
+                          ),
                         ),
                       ),
                     ),

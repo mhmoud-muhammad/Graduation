@@ -9,27 +9,21 @@ import 'pharmacy_repository.dart';
 import 'search_service.dart';
 import 'user_repository.dart';
 
-/// حاوية بسيطة للخدمات (تُنشأ مرة واحدة بعد تهيئة Firebase).
+/// حاوية بسيطة للخدمات. كل خدمة تُنشأ عند أول استخدام لها فقط
+/// (خدمة الموقع مثلاً لا تحتاج تهيئة Firebase).
 class Services {
-  Services._() {
-    final db = FirebaseFirestore.instance;
-    users = UserRepository(db);
-    auth = AuthService(FirebaseAuth.instance, users);
-    pharmacies = PharmacyRepository(db);
-    medicines = MedicineRepository(db);
-    location = LocationService();
-    gemini = GeminiService();
-    search = SearchService(medicines, pharmacies);
-  }
+  Services._();
 
   static Services? _instance;
   static Services get I => _instance ??= Services._();
 
-  late final UserRepository users;
-  late final AuthService auth;
-  late final PharmacyRepository pharmacies;
-  late final MedicineRepository medicines;
-  late final LocationService location;
-  late final GeminiService gemini;
-  late final SearchService search;
+  late final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  late final UserRepository users = UserRepository(_db);
+  late final AuthService auth = AuthService(FirebaseAuth.instance, users);
+  late final PharmacyRepository pharmacies = PharmacyRepository(_db);
+  late final MedicineRepository medicines = MedicineRepository(_db);
+  late final LocationService location = LocationService();
+  late final GeminiService gemini = GeminiService();
+  late final SearchService search = SearchService(medicines, pharmacies);
 }

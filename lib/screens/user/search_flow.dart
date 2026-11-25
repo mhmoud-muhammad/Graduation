@@ -19,7 +19,9 @@ Future<void> showSearchResults(
 }) async {
   final loc = Services.I.location;
   var allowed = await loc.hasPermission();
-  if (!allowed && context.mounted) allowed = await _askLocation(context);
+  if (!allowed && context.mounted) {
+    allowed = await askLocationPermission(context);
+  }
   Position? me;
   if (allowed) me = await loc.requestAndGet();
   if (!context.mounted) return;
@@ -33,7 +35,8 @@ Future<void> showSearchResults(
   );
 }
 
-Future<bool> _askLocation(BuildContext context) async {
+/// "هل تسمح بالوصول إلى موقعك؟" (FR-15). تعيد true عند السماح.
+Future<bool> askLocationPermission(BuildContext context) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(

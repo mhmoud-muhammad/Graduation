@@ -19,16 +19,25 @@ import 'update_medicine_screen.dart';
 /// الصيدلي قد يدير أكثر من صيدلية (علاقة «يدير» واحد إلى متعدد)، فتعمل
 /// اللوحة على "الصيدلية الحالية" مع إمكانية التبديل بينها.
 class PharmacistDashboard extends StatefulWidget {
-  const PharmacistDashboard({super.key, required this.user});
+  const PharmacistDashboard({
+    super.key,
+    required this.user,
+    this.pharmaciesSource,
+  });
   final AppUser user;
+
+  /// مصدر بديل لقائمة الصيدليات (للمعاينة والاختبار فقط).
+  @visibleForTesting
+  final Stream<List<Pharmacy>>? pharmaciesSource;
 
   @override
   State<PharmacistDashboard> createState() => _PharmacistDashboardState();
 }
 
 class _PharmacistDashboardState extends State<PharmacistDashboard> {
-  late final Stream<List<Pharmacy>> _stream = Services.I.pharmacies
-      .watchByOwner(widget.user.userId);
+  late final Stream<List<Pharmacy>> _stream =
+      widget.pharmaciesSource ??
+      Services.I.pharmacies.watchByOwner(widget.user.userId);
   String? _currentId;
 
   Pharmacy? _current(List<Pharmacy> list) {
