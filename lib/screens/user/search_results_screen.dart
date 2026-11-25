@@ -42,79 +42,119 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
+  DateTime? get _lastUpdate {
+    final dates = _current.offers
+        .map((o) => o.availability.updatedAt)
+        .whereType<DateTime>();
+    if (dates.isEmpty) return null;
+    return dates.reduce((a, b) => a.isAfter(b) ? a : b);
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = _current;
+    final updated = _lastUpdate;
     return Scaffold(
+      backgroundColor: AppColors.header,
       appBar: AppBar(
-        title: const Text('نتائج البحث'),
-        backgroundColor: AppColors.primary,
+        toolbarHeight: 70,
+        backgroundColor: AppColors.header,
         foregroundColor: Colors.white,
+        centerTitle: false,
         titleTextStyle: const TextStyle(
           fontFamily: 'Cairo',
-          fontSize: 22,
+          fontSize: 28,
           fontWeight: FontWeight.w800,
           color: Colors.white,
         ),
+        title: const Text('نتائج البحث'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.maybePop(context),
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 14, 18, 32),
-        children: [
-          if (_results.length > 1) ...[
-            Text(
-              'تم العثور على ${_results.length} أدوية مطابقة',
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 44,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _results.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (_, i) => ChoiceChip(
-                  label: Text(_results[i].medicine.tradeName),
-                  selected: i == _selected,
-                  onSelected: (_) => setState(() => _selected = i),
-                ),
+      body: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 22, 18, 32),
+          children: [
+            if (_results.length > 1) ...[
+              Text(
+                'تم العثور على ${_results.length} أدوية مطابقة',
+                style: const TextStyle(color: AppColors.muted),
               ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          _MedicineHeader(result: r),
-          const SectionTitle('الصيدليات المتوفرة:'),
-          if (r.offers.isEmpty)
-            const EmptyState(
-              icon: Icons.inventory_2_outlined,
-              title: Msg.medicineNotAvailableNow,
-            )
-          else ...[
-            if (!widget.outcome.sortedByDistance)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 10),
-                child: Card(
-                  color: AppColors.sky,
-                  child: ListTile(
-                    leading: Icon(Icons.location_off_outlined),
-                    subtitle: Text(Msg.locationDenied),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _results.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => ChoiceChip(
+                    label: Text(_results[i].medicine.tradeName),
+                    selected: i == _selected,
+                    onSelected: (_) => setState(() => _selected = i),
                   ),
                 ),
               ),
-            for (final o in r.offers) ...[
-              _OfferCard(
-                offer: o,
-                form: r.medicine.pharmaceuticalForm,
-                onTap: () => _openMap(focus: o),
-              ),
               const SizedBox(height: 12),
             ],
-            FilledButton.icon(
-              icon: const Icon(Icons.map_outlined),
-              label: const Text('عرض الصيدليات على الخريطة'),
-              onPressed: _openMap,
+            _MedicineHeader(result: r),
+            const SizedBox(height: 18),
+            const Text(
+              'الصيدليات المتوفرة:',
+              style: TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1A1F36),
+              ),
             ),
+            const SizedBox(height: 12),
+            if (r.offers.isEmpty)
+              const EmptyState(
+                icon: Icons.inventory_2_outlined,
+                title: Msg.medicineNotAvailableNow,
+              )
+            else ...[
+              if (!widget.outcome.sortedByDistance)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Card(
+                    color: AppColors.waveLight,
+                    child: ListTile(
+                      leading: Icon(Icons.location_off_outlined),
+                      subtitle: Text(Msg.locationDenied),
+                    ),
+                  ),
+                ),
+              for (final o in r.offers) ...[
+                _OfferCard(
+                  offer: o,
+                  form: r.medicine.pharmaceuticalForm,
+                  onTap: () => _openMap(focus: o),
+                ),
+                const SizedBox(height: 14),
+              ],
+              OutlinedButton.icon(
+                icon: const Icon(Icons.map_outlined),
+                label: const Text('عرض الصيدليات على الخريطة'),
+                onPressed: _openMap,
+              ),
+              if (updated != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: Text(
+                    'آخر تحديث: ${Fmt.date(updated)}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.muted),
+                  ),
+                ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -130,25 +170,11 @@ class _MedicineHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.resultCard,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.medication,
-              size: 42,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,22 +182,27 @@ class _MedicineHeader extends StatelessWidget {
                 Text(
                   m.tradeName,
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 26,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.navy,
+                    color: Color(0xFF1A1F36),
                   ),
                 ),
                 Text(
                   m.scientificName,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 16),
+                  style: const TextStyle(
+                    color: Color(0xFF4A5568),
+                    fontSize: 19,
+                  ),
                 ),
                 Text(
                   'الشكل الصيدلاني: ${m.pharmaceuticalForm}',
-                  style: const TextStyle(color: AppColors.navy),
+                  style: const TextStyle(color: Color(0xFF4A5568)),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 12),
+          const Illustration('medicine_thumb', height: 90, radius: 12),
         ],
       ),
     );
@@ -198,20 +229,20 @@ class _OfferCard extends StatelessWidget {
       'السعر ${Fmt.price(a.price)}',
       'الكمية: ${a.quantity}',
     ].join(' • ');
+    const sub = TextStyle(color: Color(0xFF1A1F36), fontSize: 14.5);
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 6, 12),
+          padding: const EdgeInsets.fromLTRB(4, 14, 14, 14),
           child: Row(
             children: [
-              const CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primary,
-                child: Icon(Icons.location_on, color: Colors.white),
+              const Icon(
+                Icons.chevron_right,
+                color: AppColors.header,
+                size: 32,
               ),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,15 +250,32 @@ class _OfferCard extends StatelessWidget {
                     Text(
                       p.pharmacyName,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 21,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.navy,
+                        color: Color(0xFF1A1F36),
                       ),
                     ),
-                    Text(line, style: const TextStyle(color: AppColors.navy)),
-                    Text(
-                      'الشكل الصيدلاني: $form',
-                      style: const TextStyle(color: AppColors.muted),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 17,
+                          color: AppColors.header,
+                        ),
+                        const SizedBox(width: 3),
+                        Expanded(child: Text(line, style: sub)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.medication,
+                          size: 17,
+                          color: AppColors.header,
+                        ),
+                        const SizedBox(width: 3),
+                        Text('الشكل الصيدلاني: $form', style: sub),
+                      ],
                     ),
                     if (p.address != null)
                       Text(
@@ -243,7 +291,7 @@ class _OfferCard extends StatelessWidget {
                         child: Row(
                           children: [
                             const Icon(
-                              Icons.phone_outlined,
+                              Icons.phone,
                               size: 16,
                               color: AppColors.primary,
                             ),
@@ -259,7 +307,12 @@ class _OfferCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_left, color: AppColors.primary),
+              const SizedBox(width: 8),
+              const CircleAvatar(
+                radius: 25,
+                backgroundColor: Color(0xFF1FB2A7),
+                child: Icon(Icons.location_on, color: Colors.white, size: 30),
+              ),
             ],
           ),
         ),

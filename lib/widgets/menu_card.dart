@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 
-/// بطاقة خيار كبيرة (البحث بالكتابة / بالصورة، بيانات الصيدلية / إدارة الأدوية).
+/// بطاقة خيار كبيرة.
+/// - العادية (البحث بالكتابة/بالصورة): بيضاء مع دائرة فيروزية للأيقونة.
+/// - [tinted] (لوحة الصيدلي): زرقاء فاتحة مع أيقونة فيروزية.
 class MenuCard extends StatelessWidget {
   const MenuCard({
     super.key,
@@ -21,60 +23,80 @@ class MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: tinted ? AppColors.skyDeep.withValues(alpha: 0.7) : Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      elevation: 3,
-      shadowColor: AppColors.navy.withValues(alpha: 0.15),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
-          child: Row(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: tinted
-                      ? Colors.white.withValues(alpha: 0.6)
-                      : AppColors.primary,
-                  borderRadius: BorderRadius.circular(tinted ? 16 : 29),
-                ),
-                child: Icon(
-                  icon,
-                  color: tinted ? AppColors.primary : Colors.white,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.navy,
+    final radius = BorderRadius.circular(tinted ? 22 : 24);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.navy.withValues(alpha: tinted ? 0.18 : 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: tinted ? AppColors.dashCard : Colors.white,
+        borderRadius: radius,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: tinted ? 26 : 22,
+            ),
+            child: Row(
+              children: [
+                if (tinted)
+                  Icon(icon, color: AppColors.header, size: 46)
+                else
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF3CC2C0), Color(0xFF15A9A6)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
                     ),
-                    if (subtitle != null)
-                      Text(
-                        subtitle!,
-                        style: const TextStyle(color: AppColors.muted),
+                    child: Icon(icon, color: Colors.white, size: 34),
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: tinted ? 22 : 23,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.navy,
+                          ),
+                        ),
                       ),
-                  ],
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          style: const TextStyle(color: AppColors.muted),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(
-                Icons.chevron_left,
-                color: AppColors.primary,
-                size: 30,
-              ),
-            ],
+                Icon(
+                  Icons.chevron_right,
+                  color: tinted ? AppColors.navySoft : AppColors.header,
+                  size: 34,
+                ),
+              ],
+            ),
           ),
         ),
       ),

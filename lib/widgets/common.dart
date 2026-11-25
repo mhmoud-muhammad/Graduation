@@ -6,7 +6,16 @@ import '../core/app_theme.dart';
 import '../core/firebase_errors.dart';
 import '../core/messages.dart';
 
-/// خلفية بموجات زرقاء كما في التصميم.
+/// نمط موجات الخلفية كما في التصاميم.
+enum WaveStyle {
+  /// موجات زرقاء فاتحة (الدخول، البحث، إضافة دواء).
+  blue,
+
+  /// موجات فيروزية في الأسفل (إنشاء حساب، بيانات الصيدلية).
+  teal,
+}
+
+/// خلفية بموجات كما في التصميم.
 class WaveBackground extends StatelessWidget {
   const WaveBackground({
     super.key,
@@ -14,17 +23,27 @@ class WaveBackground extends StatelessWidget {
     this.top = true,
     this.bottom = true,
     this.color = AppColors.background,
+    this.style = WaveStyle.blue,
+    this.gradient,
   });
 
   final Widget child;
   final bool top;
   final bool bottom;
   final Color color;
+  final WaveStyle style;
+  final Gradient? gradient;
 
   @override
   Widget build(BuildContext context) {
+    final colors = style == WaveStyle.teal
+        ? const [Color(0xFFBFE9EA), Color(0xFF8ED8D5), Color(0xFF3DB8B4)]
+        : const [AppColors.waveLight, Color(0xFFBCDDF4), AppColors.wave];
     return DecoratedBox(
-      decoration: BoxDecoration(color: color),
+      decoration: BoxDecoration(
+        color: gradient == null ? color : null,
+        gradient: gradient,
+      ),
       child: Stack(
         children: [
           if (top)
@@ -32,16 +51,20 @@ class WaveBackground extends StatelessWidget {
               top: 0,
               left: 0,
               right: 0,
-              height: 110,
-              child: CustomPaint(painter: _WavePainter(flip: true)),
+              height: 120,
+              child: CustomPaint(
+                painter: _WavePainter(flip: true, colors: colors),
+              ),
             ),
           if (bottom)
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
-              height: 120,
-              child: CustomPaint(painter: _WavePainter(flip: false)),
+              height: 130,
+              child: CustomPaint(
+                painter: _WavePainter(flip: false, colors: colors),
+              ),
             ),
           Positioned.fill(child: child),
         ],
@@ -51,8 +74,9 @@ class WaveBackground extends StatelessWidget {
 }
 
 class _WavePainter extends CustomPainter {
-  _WavePainter({required this.flip});
+  _WavePainter({required this.flip, required this.colors});
   final bool flip;
+  final List<Color> colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -77,21 +101,17 @@ class _WavePainter extends CustomPainter {
       canvas.drawPath(p, Paint()..color = c);
     }
 
-    wave(AppColors.skyDeep.withValues(alpha: 0.55), 14, size.height * 0.35, 0);
-    wave(AppColors.sky.withValues(alpha: 0.9), 12, size.height * 0.55, 1.6);
-    wave(
-      AppColors.primary.withValues(alpha: 0.18),
-      10,
-      size.height * 0.72,
-      3.1,
-    );
+    wave(colors[0].withValues(alpha: 0.8), 14, size.height * 0.30, 0);
+    wave(colors[1].withValues(alpha: 0.8), 12, size.height * 0.52, 1.6);
+    wave(colors[2].withValues(alpha: 0.75), 10, size.height * 0.72, 3.1);
   }
 
   @override
-  bool shouldRepaint(covariant _WavePainter old) => old.flip != flip;
+  bool shouldRepaint(covariant _WavePainter old) =>
+      old.flip != flip || old.colors != colors;
 }
 
-/// شعار التطبيق.
+/// أيقونة التطبيق (الكبسولة والعدسة).
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, this.size = 120});
   final double size;
@@ -108,6 +128,198 @@ class AppLogo extends StatelessWidget {
       ),
     );
   }
+}
+
+/// شعار شاشة الدخول: الكبسولة + كلمة "دوائي".
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Image.asset('assets/images/logo_pill.png', height: 86),
+        const Text(
+          'دوائي',
+          style: TextStyle(
+            fontSize: 52,
+            height: 1.5,
+            fontWeight: FontWeight.w800,
+            color: AppColors.navy,
+          ),
+        ),
+        const Text(
+          'ابحث عن أدويتك بسهولة',
+          style: TextStyle(fontSize: 17, color: Color(0xFF4A5568)),
+        ),
+      ],
+    );
+  }
+}
+
+/// رسم توضيحي من التصاميم (assets/images).
+class Illustration extends StatelessWidget {
+  const Illustration(this.name, {super.key, this.height, this.radius = 0});
+  final String name;
+  final double? height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(radius),
+    child: Image.asset(
+      'assets/images/$name.png',
+      height: height,
+      fit: BoxFit.contain,
+    ),
+  );
+}
+
+/// ترويسة فيروزية بحافة سفلية منحنية (نتائج البحث، لوحة الصيدلي، أدوية
+/// صيدليتي، بيانات الصيدلية، تحديث الدواء).
+class TealHeader extends StatelessWidget {
+  const TealHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.showBack = true,
+    this.backStyle = BackStyle.plain,
+    this.curve = 34,
+    this.titleSize = 26,
+    this.alignStart = false,
+    this.endWidget,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final bool showBack;
+  final BackStyle backStyle;
+  final double curve;
+  final double titleSize;
+  final bool alignStart;
+
+  /// عنصر في الطرف الأيسر بدلاً من زر الرجوع (مثل صورة الصيدلي).
+  final Widget? endWidget;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    final canPop = showBack && Navigator.of(context).canPop();
+    Widget? back;
+    if (canPop) {
+      back = backStyle == BackStyle.circle
+          ? Material(
+              color: Colors.white,
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                color: AppColors.header,
+                onPressed: () => Navigator.maybePop(context),
+              ),
+            )
+          : IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new),
+              color: Colors.white,
+              onPressed: () => Navigator.maybePop(context),
+            );
+    }
+    final texts = Column(
+      crossAxisAlignment: alignStart
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: titleSize,
+            fontWeight: FontWeight.w800,
+            height: 1.3,
+          ),
+        ),
+        if (subtitle != null)
+          Text(
+            subtitle!,
+            textAlign: alignStart ? TextAlign.start : TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+      ],
+    );
+    return ClipPath(
+      clipper: _HeaderClipper(curve),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.fromLTRB(12, top + 10, 12, curve + 16),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF06ABA5), AppColors.header],
+          ),
+        ),
+        child: Row(
+          children: [
+            if (trailing != null && alignStart) ...[
+              trailing!,
+              const SizedBox(width: 14),
+            ],
+            if (!alignStart) SizedBox(width: 48, child: trailing),
+            Expanded(child: texts),
+            endWidget ?? SizedBox(width: 52, child: back),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum BackStyle { plain, circle }
+
+class _HeaderClipper extends CustomClipper<Path> {
+  _HeaderClipper(this.curve);
+  final double curve;
+
+  @override
+  Path getClip(Size size) => Path()
+    ..lineTo(0, size.height)
+    ..quadraticBezierTo(
+      size.width / 2,
+      size.height - curve * 2,
+      size.width,
+      size.height,
+    )
+    ..lineTo(size.width, 0)
+    ..close();
+
+  @override
+  bool shouldReclip(covariant _HeaderClipper old) => old.curve != curve;
+}
+
+/// صندوق أيقونة فاتح بجانب الحقول (شاشة بيانات الصيدلية).
+class IconBox extends StatelessWidget {
+  const IconBox(this.icon, {super.key, this.size = 52});
+  final IconData icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: AppColors.iconBox,
+      borderRadius: BorderRadius.circular(14),
+    ),
+    child: Icon(icon, color: AppColors.header, size: size * 0.55),
+  );
 }
 
 /// زر رئيسي يعرض مؤشر تحميل أثناء التنفيذ.

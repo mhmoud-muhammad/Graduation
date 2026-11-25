@@ -117,39 +117,51 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
   Widget build(BuildContext context) {
     final a = _analysis;
     return Scaffold(
-      appBar: AppBar(title: const Text('البحث بالصورة')),
+      backgroundColor: const Color(0xFFEEF7FF),
+      appBar: AppBar(
+        toolbarHeight: 72,
+        backgroundColor: const Color(0xFFE3EAF2),
+        title: const Text(
+          'البحث بالصورة',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          color: AppColors.navy,
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
       body: WaveBackground(
         top: false,
+        color: const Color(0xFFEEF7FF),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 140),
+          padding: const EdgeInsets.fromLTRB(26, 16, 26, 140),
           children: [
+            // FR-05 / FR-06: نوع الصورة (عبوة دواء أو روشتة طبية).
             SegmentedButton<ImageKind>(
+              style: SegmentedButton.styleFrom(
+                selectedBackgroundColor: AppColors.primary,
+                selectedForegroundColor: Colors.white,
+                backgroundColor: Colors.white,
+              ),
               segments: [
                 for (final k in ImageKind.values)
-                  ButtonSegment(
-                    value: k,
-                    label: Text(k.label),
-                    icon: Icon(
-                      k == ImageKind.package
-                          ? Icons.medication_outlined
-                          : Icons.receipt_long_outlined,
-                    ),
-                  ),
+                  ButtonSegment(value: k, label: Text(k.label)),
               ],
               selected: {_kind},
               onSelectionChanged: _loading
                   ? null
                   : (s) => setState(() => _kind = s.first),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             _PreviewBox(bytes: _bytes, kind: _kind, loading: _loading),
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
             Text(
               _loading
                   ? _status
-                  : 'سنقوم بتحديد الدواء وعرض التفاصيل والأسعار المتاحة',
+                  : 'ستقوم بتحديد الدواء وعرض التفاصيل والأسعار المتاحة',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.muted),
+              style: const TextStyle(color: Color(0xFF4A5568), fontSize: 15),
             ),
             if (a != null && !_loading) ...[
               const SizedBox(height: 12),
@@ -159,17 +171,17 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
                 onSearchName: _searchByName,
               ),
             ],
-            const SizedBox(height: 18),
-            LoadingButton(
-              icon: Icons.photo_library_outlined,
-              label: 'اختيار صورة من المعرض',
-              onPressed: _loading ? null : () => _pick(ImageSource.gallery),
+            const SizedBox(height: 20),
+            _pickButton(
+              Icons.image_outlined,
+              'اختيار صورة من المعرض',
+              ImageSource.gallery,
             ),
-            const SizedBox(height: 12),
-            LoadingButton(
-              icon: Icons.photo_camera_outlined,
-              label: 'التقاط صورة بالكاميرا',
-              onPressed: _loading ? null : () => _pick(ImageSource.camera),
+            const SizedBox(height: 14),
+            _pickButton(
+              Icons.photo_camera_outlined,
+              'التقاط صورة بالكاميرا',
+              ImageSource.camera,
             ),
             if (_bytes != null && !_loading) ...[
               const SizedBox(height: 12),
@@ -184,6 +196,30 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
       ),
     );
   }
+
+  Widget _pickButton(IconData icon, String label, ImageSource source) =>
+      FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFF078E98),
+          minimumSize: const Size.fromHeight(60),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        onPressed: _loading ? null : () => _pick(source),
+        child: Row(
+          children: [
+            Icon(icon, size: 32),
+            Expanded(child: Text(label, textAlign: TextAlign.center)),
+            const SizedBox(width: 32),
+          ],
+        ),
+      );
 }
 
 class _PreviewBox extends StatelessWidget {
@@ -199,48 +235,87 @@ class _PreviewBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 280,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary, width: 1.6),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (bytes != null)
-            Image.memory(bytes!, fit: BoxFit.contain)
-          else
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.add_a_photo_outlined,
-                  size: 54,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  kind == ImageKind.package
-                      ? 'ضع صورة علبة الدواء أو الشريط هنا للبحث'
-                      : 'ضع صورة الروشتة هنا للبحث',
-                  style: const TextStyle(color: AppColors.navy),
-                ),
-              ],
-            ),
-          if (loading)
-            const ColoredBox(
-              color: Color(0x88FFFFFF),
-              child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+    return CustomPaint(
+      painter: _DashedBorder(),
+      child: SizedBox(
+        height: 300,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.photo_camera_outlined,
+                    size: 36,
+                    color: AppColors.primary,
+                  ),
+                  Expanded(
+                    child: bytes != null
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.memory(bytes!, fit: BoxFit.contain),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.medication_outlined,
+                            size: 90,
+                            color: Color(0xFFB5CCE0),
+                          ),
+                  ),
+                  Text(
+                    kind == ImageKind.package
+                        ? 'ضع صورة علبة الدواء أو الشريط هنا للبحث'
+                        : 'ضع صورة الروشتة هنا للبحث',
+                    style: const TextStyle(
+                      color: Color(0xFF1A1F36),
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
+            if (loading)
+              const ColoredBox(
+                color: Color(0x88FFFFFF),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// إطار متقطع فيروزي حول مكان الصورة (كما في التصميم).
+class _DashedBorder extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.primary
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(22),
+    );
+    final path = Path()..addRRect(rrect);
+    for (final metric in path.computeMetrics()) {
+      var d = 0.0;
+      while (d < metric.length) {
+        canvas.drawPath(metric.extractPath(d, d + 10), paint);
+        d += 18;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _AnalysisCard extends StatelessWidget {

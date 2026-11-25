@@ -17,71 +17,87 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.sky,
+      backgroundColor: AppColors.homeBg,
       appBar: AppBar(
+        backgroundColor: AppColors.homeBar,
+        toolbarHeight: 76,
         centerTitle: false,
+        automaticallyImplyLeading: false,
         title: const Text(
           AppConfig.appName,
           style: TextStyle(
             fontFamily: 'Cairo',
-            fontSize: 30,
+            fontSize: 38,
             fontWeight: FontWeight.w800,
             color: AppColors.navy,
           ),
         ),
+        actions: [
+          Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu, size: 34),
+              color: AppColors.logoutBlue,
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       drawer: _UserDrawer(user: user),
-      body: WaveBackground(
-        top: false,
-        color: AppColors.sky,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 40),
-          children: [
-            Text(
-              'مرحباً ${user.name.split(' ').first}',
-              style: const TextStyle(
-                fontSize: 32,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+        children: [
+          const Text(
+            'مرحباً بك',
+            style: TextStyle(
+              fontSize: 46,
+              height: 1.2,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1530A0),
+            ),
+          ),
+          Text(
+            '${user.name.split(' ').first}، ابحث عن الدواء بالطريقة التي تناسبك',
+            style: const TextStyle(fontSize: 18, color: AppColors.navy),
+          ),
+          const SizedBox(height: 26),
+          MenuCard(
+            icon: Icons.keyboard_alt_outlined,
+            title: 'البحث بالكتابة',
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const TextSearchScreen())),
+          ),
+          const SizedBox(height: 18),
+          MenuCard(
+            icon: Icons.photo_camera_outlined,
+            title: 'البحث بالصورة',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ImageSearchScreen()),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Illustration('home_bottles', height: 190),
+          const SizedBox(height: 18),
+          // تسجيل الخروج أسفل خياري البحث (وصف حالة الاستخدام).
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.logoutBlue,
+              minimumSize: const Size.fromHeight(62),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              textStyle: const TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 24,
                 fontWeight: FontWeight.w800,
-                color: AppColors.navy,
               ),
             ),
-            const Text(
-              'ابحث عن الدواء بالطريقة التي تناسبك',
-              style: TextStyle(fontSize: 17, color: AppColors.navy),
-            ),
-            const SizedBox(height: 28),
-            MenuCard(
-              icon: Icons.keyboard_alt_outlined,
-              title: 'البحث بالكتابة',
-              subtitle: 'بالاسم التجاري أو العلمي',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const TextSearchScreen()),
-              ),
-            ),
-            const SizedBox(height: 18),
-            MenuCard(
-              icon: Icons.photo_camera_outlined,
-              title: 'البحث بالصورة',
-              subtitle: 'صورة العبوة أو الروشتة',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ImageSearchScreen()),
-              ),
-            ),
-            const SizedBox(height: 30),
-            const Icon(
-              Icons.medication_liquid,
-              size: 110,
-              color: AppColors.primary,
-            ),
-            const SizedBox(height: 30),
-            // تسجيل الخروج أسفل خياري البحث (وصف حالة الاستخدام).
-            LoadingButton(
-              icon: Icons.logout,
-              label: 'تسجيل الخروج',
-              onPressed: () => confirmAndSignOut(context),
-            ),
-          ],
-        ),
+            icon: const Icon(Icons.logout, size: 28),
+            label: const Text('تسجيل الخروج'),
+            onPressed: () => confirmAndSignOut(context),
+          ),
+        ],
       ),
     );
   }

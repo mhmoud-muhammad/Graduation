@@ -12,9 +12,9 @@ abstract final class AppConfig {
   /// رمز العملة المعروض بجانب الأسعار (جنيه سوداني).
   static const String currency = 'ج.س';
 
-  /// موقع افتراضي للخريطة (الخرطوم) عند عدم توفر موقع المستخدم.
-  static const double defaultLat = 15.5007;
-  static const double defaultLng = 32.5599;
+  /// الموقع الافتراضي للخريطة: مدينة عطبرة (عند عدم توفر موقع المستخدم).
+  static const double defaultLat = 17.7022;
+  static const double defaultLng = 33.9869;
 
   /// الأشكال الصيدلانية المتاحة عند إضافة دواء (FR-09).
   static const List<String> pharmaceuticalForms = [

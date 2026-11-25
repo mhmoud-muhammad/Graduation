@@ -65,38 +65,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  InputDecoration _field(String hint, IconData icon) => InputDecoration(
+    hintText: hint,
+    suffixIcon: Icon(icon, color: AppColors.logoutBlue),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+  );
+
   @override
   Widget build(BuildContext context) {
     final pharmacist = _type == UserType.pharmacist;
     return Scaffold(
-      appBar: AppBar(title: const Text('إنشاء حساب جديد')),
+      backgroundColor: AppColors.registerBg,
+      appBar: AppBar(
+        title: const Text('إنشاء حساب جديد'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          color: AppColors.navy,
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
       body: WaveBackground(
         top: false,
+        style: WaveStyle.teal,
+        color: AppColors.registerBg,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 4, 24, 120),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 130),
           child: Form(
             key: _form,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  height: 110,
-                  decoration: const BoxDecoration(
-                    color: AppColors.sky,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person_add_alt_1,
-                    size: 56,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
+                const Illustration('register_header', height: 150),
+                const SizedBox(height: 6),
                 const Text(
                   'انضم إلينا للبحث عن الأدوية بسهولة',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontWeight: FontWeight.w700,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.navy,
                   ),
                 ),
@@ -104,34 +110,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _name,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    hintText: 'الاسم الكامل',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
+                  decoration: _field('الاسم الكامل', Icons.person),
                   validator: (v) => Validators.required(v, 'الاسم'),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
-                  textDirection: TextDirection.ltr,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    hintText: 'البريد الإلكتروني',
-                    prefixIcon: Icon(Icons.mail_outline),
-                  ),
+                  decoration: _field('البريد الإلكتروني', Icons.mail_outline),
                   validator: Validators.email,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _phone,
                   keyboardType: TextInputType.phone,
-                  textDirection: TextDirection.ltr,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    hintText: 'رقم الهاتف (اختياري)',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
+                  decoration: _field('رقم الهاتف (اختياري)', Icons.phone),
                   validator: Validators.optionalPhone,
                 ),
                 const SizedBox(height: 12),
@@ -139,27 +134,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _password,
                   obscureText: true,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    hintText: 'كلمة المرور',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
+                  decoration: _field('كلمة المرور', Icons.lock_outline),
                   validator: Validators.password,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _confirm,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    hintText: 'تأكيد كلمة المرور',
-                    prefixIcon: Icon(Icons.lock_outline),
-                  ),
+                  decoration: _field('تأكيد كلمة المرور', Icons.lock_outline),
                   validator: (v) =>
                       v != _password.text ? 'كلمتا المرور غير متطابقتين' : null,
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 const Text(
                   'نوع الحساب:',
                   style: TextStyle(
+                    fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.navy,
                   ),
@@ -175,7 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onTap: () => setState(() => _type = t),
                         ),
                       ),
-                      if (t != UserType.values.last) const SizedBox(width: 12),
+                      if (t != UserType.values.last) const SizedBox(width: 14),
                     ],
                   ],
                 ),
@@ -183,21 +173,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _license,
-                    textDirection: TextDirection.ltr,
-                    decoration: const InputDecoration(
-                      hintText: 'رقم ترخيص مزاولة المهنة',
-                      prefixIcon: Icon(Icons.badge_outlined),
+                    decoration: _field(
+                      'رقم ترخيص مزاولة المهنة',
+                      Icons.badge_outlined,
                     ),
                     validator: Validators.license,
                   ),
                 ],
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
                 LoadingButton(
                   label: 'إنشاء الحساب',
                   loading: _loading,
                   onPressed: _submit,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
+                const Row(
+                  children: [
+                    Expanded(child: Divider(indent: 30, endIndent: 12)),
+                    Text(
+                      'أو',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.navy,
+                      ),
+                    ),
+                    Expanded(child: Divider(indent: 12, endIndent: 30)),
+                  ],
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -235,7 +237,8 @@ class _TypeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final fg = selected ? Colors.white : AppColors.primaryDark;
     return Material(
-      color: selected ? AppColors.primary : Colors.white,
+      color: selected ? const Color(0xFF14858C) : Colors.white,
+      elevation: selected ? 2 : 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: const BorderSide(color: AppColors.primary),
@@ -250,7 +253,7 @@ class _TypeChip extends StatelessWidget {
             children: [
               Icon(
                 type == UserType.pharmacist
-                    ? Icons.medical_services_outlined
+                    ? Icons.medical_information_outlined
                     : Icons.person,
                 color: fg,
               ),

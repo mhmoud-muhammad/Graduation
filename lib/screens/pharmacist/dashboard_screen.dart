@@ -69,12 +69,35 @@ class _PharmacistDashboardState extends State<PharmacistDashboard> {
         final current = _current(list);
         final loading = snap.connectionState == ConnectionState.waiting;
         return Scaffold(
+          backgroundColor: Colors.white,
           body: Column(
             children: [
-              _Header(user: widget.user, pharmacy: current),
+              TealHeader(
+                title: 'لوحة الصيدلي',
+                subtitle: current?.pharmacyName ?? widget.user.name,
+                titleSize: 32,
+                alignStart: true,
+                showBack: false,
+                curve: 40,
+                endWidget: Container(
+                  width: 92,
+                  height: 92,
+                  padding: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/pharmacist_avatar.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+                  padding: const EdgeInsets.fromLTRB(26, 4, 26, 24),
                   children: [
                     if (list.length > 1)
                       _PharmacySwitcher(
@@ -102,15 +125,14 @@ class _PharmacistDashboardState extends State<PharmacistDashboard> {
                     const SizedBox(height: 10),
                     MenuCard(
                       tinted: true,
-                      icon: Icons.local_hospital_outlined,
+                      icon: Icons.location_city,
                       title: 'بيانات الصيدلية',
-                      subtitle: 'تسجيل صيدلية أو تعديل بياناتها',
                       onTap: () => _openInfo(current),
                     ),
                     const SizedBox(height: 14),
                     MenuCard(
                       tinted: true,
-                      icon: Icons.add_circle_outline,
+                      icon: Icons.medication_liquid_outlined,
                       title: 'إضافة دواء',
                       onTap: () => _requirePharmacy(
                         current,
@@ -122,7 +144,6 @@ class _PharmacistDashboardState extends State<PharmacistDashboard> {
                       tinted: true,
                       icon: Icons.edit_outlined,
                       title: 'تحديث بيانات الأدوية',
-                      subtitle: 'تعديل السعر والكمية أو حذف دواء',
                       onTap: () => _requirePharmacy(
                         current,
                         (p) => UpdateMedicineScreen(pharmacy: p),
@@ -131,7 +152,7 @@ class _PharmacistDashboardState extends State<PharmacistDashboard> {
                     const SizedBox(height: 14),
                     MenuCard(
                       tinted: true,
-                      icon: Icons.assignment_outlined,
+                      icon: Icons.fact_check_outlined,
                       title: 'أدوية صيدليتي',
                       onTap: () => _requirePharmacy(
                         current,
@@ -142,7 +163,19 @@ class _PharmacistDashboardState extends State<PharmacistDashboard> {
                     Center(
                       child: OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(180, 46),
+                          minimumSize: const Size(190, 52),
+                          side: const BorderSide(
+                            color: AppColors.header,
+                            width: 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         icon: const Icon(Icons.logout),
                         label: const Text('تسجيل الخروج'),
@@ -192,79 +225,4 @@ class _PharmacySwitcher extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.user, required this.pharmacy});
-  final AppUser user;
-  final Pharmacy? pharmacy;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: _CurveClipper(),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.fromLTRB(
-          22,
-          MediaQuery.paddingOf(context).top + 18,
-          22,
-          56,
-        ),
-        color: AppColors.primary,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'لوحة الصيدلي',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    pharmacy?.pharmacyName ?? user.name,
-                    style: const TextStyle(color: Colors.white, fontSize: 17),
-                  ),
-                ],
-              ),
-            ),
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: Colors.white,
-              child: Text(
-                user.name.isEmpty ? '؟' : user.name.characters.first,
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CurveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) => Path()
-    ..lineTo(0, size.height - 30)
-    ..quadraticBezierTo(
-      size.width / 2,
-      size.height + 20,
-      size.width,
-      size.height - 30,
-    )
-    ..lineTo(size.width, 0)
-    ..close();
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

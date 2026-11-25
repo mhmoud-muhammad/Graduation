@@ -133,173 +133,245 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
     }
   }
 
+  Widget _labeled(String label, IconData icon, Widget field) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 66, bottom: 4),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              color: AppColors.navy,
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            IconBox(icon),
+            const SizedBox(width: 12),
+            Expanded(child: field),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  InputDecoration get _pill => InputDecoration(
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(26)),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(26),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+  );
+
+  Widget _coord(
+    String label,
+    TextEditingController c,
+    FormFieldValidator<String> v,
+  ) => Expanded(
+    child: Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.navy,
+          ),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: c,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+          style: const TextStyle(fontSize: 18),
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: true,
+          ),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.fieldTint,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onChanged: (_) => setState(() {}),
+          validator: v,
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final point = _point;
     final hasPharmacy = widget.pharmacy != null;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('بيانات الصيدلية'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'Cairo',
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
-      ),
-      body: Form(
-        key: _form,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          children: [
-            const FieldLabel('اسم الصيدلية'),
-            TextFormField(
-              controller: _name,
-              decoration: const InputDecoration(
-                hintText: 'مثال: صيدلية النور',
-                prefixIcon: Icon(Icons.storefront_outlined),
-              ),
-              validator: (v) => Validators.required(v, 'اسم الصيدلية'),
-            ),
-            const FieldLabel('عنوان الصيدلية'),
-            TextFormField(
-              controller: _address,
-              decoration: const InputDecoration(
-                hintText: 'مثال: الخرطوم – السوق العربي',
-                prefixIcon: Icon(Icons.place_outlined),
-              ),
-            ),
-            const FieldLabel('رقم الهاتف'),
-            TextFormField(
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              textDirection: TextDirection.ltr,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.phone_outlined),
-              ),
-              validator: Validators.optionalPhone,
-            ),
-            const FieldLabel('الموقع الجغرافي (اضغط على الخريطة لتحديده)'),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: SizedBox(
-                height: 220,
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target:
-                        point ??
-                        const LatLng(
-                          AppConfig.defaultLat,
-                          AppConfig.defaultLng,
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          const TealHeader(
+            title: 'بيانات الصيدلية',
+            backStyle: BackStyle.circle,
+            titleSize: 28,
+            curve: 14,
+            trailing: Icon(Icons.add_business, color: Colors.white, size: 46),
+          ),
+          Expanded(
+            child: WaveBackground(
+              top: false,
+              style: WaveStyle.teal,
+              color: Colors.white,
+              child: Form(
+                key: _form,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 130),
+                  children: [
+                    _labeled(
+                      'اسم الصيدلية',
+                      Icons.storefront,
+                      TextFormField(
+                        controller: _name,
+                        decoration: _pill.copyWith(
+                          hintText: 'مثال: صيدلية النور',
                         ),
-                    zoom: point == null ? 12 : 16,
-                  ),
-                  onMapCreated: (c) => _map = c,
-                  onTap: (p) => _setPoint(p, moveCamera: false),
-                  markers: {
-                    if (point != null)
-                      Marker(
-                        markerId: const MarkerId('pharmacy'),
-                        position: point,
-                        draggable: true,
-                        onDragEnd: (p) => _setPoint(p, moveCamera: false),
-                        infoWindow: const InfoWindow(title: 'موقع الصيدلية'),
+                        validator: (v) =>
+                            Validators.required(v, 'اسم الصيدلية'),
                       ),
-                  },
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: true,
-                  gestureRecognizers: {
-                    Factory<OneSequenceGestureRecognizer>(
-                      EagerGestureRecognizer.new,
                     ),
-                  },
+                    _labeled(
+                      'عنوان الصيدلية',
+                      Icons.location_on,
+                      TextFormField(
+                        controller: _address,
+                        decoration: _pill.copyWith(
+                          hintText: 'مثال: عطبرة – السوق الكبير',
+                        ),
+                      ),
+                    ),
+                    _labeled(
+                      'رقم الهاتف',
+                      Icons.phone,
+                      TextFormField(
+                        controller: _phone,
+                        keyboardType: TextInputType.phone,
+                        decoration: _pill,
+                        validator: Validators.optionalPhone,
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 12, bottom: 6),
+                      child: Text(
+                        'الموقع الجغرافي',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.navy,
+                        ),
+                      ),
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        height: 200,
+                        child: GoogleMap(
+                          initialCameraPosition: CameraPosition(
+                            target:
+                                point ??
+                                const LatLng(
+                                  AppConfig.defaultLat,
+                                  AppConfig.defaultLng,
+                                ),
+                            zoom: point == null ? 13 : 16,
+                          ),
+                          onMapCreated: (c) => _map = c,
+                          onTap: (p) => _setPoint(p, moveCamera: false),
+                          markers: {
+                            if (point != null)
+                              Marker(
+                                markerId: const MarkerId('pharmacy'),
+                                position: point,
+                                draggable: true,
+                                onDragEnd: (p) =>
+                                    _setPoint(p, moveCamera: false),
+                                infoWindow: const InfoWindow(
+                                  title: 'موقع الصيدلية',
+                                ),
+                              ),
+                          },
+                          myLocationButtonEnabled: false,
+                          zoomControlsEnabled: true,
+                          gestureRecognizers: {
+                            Factory<OneSequenceGestureRecognizer>(
+                              EagerGestureRecognizer.new,
+                            ),
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _coord('خط العرض', _lat, Validators.latitude),
+                        const SizedBox(width: 16),
+                        _coord('خط الطول', _lng, Validators.longitude),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    LoadingButton(
+                      label: 'تسجيل',
+                      loading: _saving,
+                      onPressed: () => _save(isNew: true),
+                    ),
+                    const SizedBox(height: 12),
+                    LoadingButton(
+                      label: 'تعديل',
+                      loading: _saving,
+                      onPressed: hasPharmacy ? () => _save(isNew: false) : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(260, 50),
+                          foregroundColor: AppColors.navy,
+                        ),
+                        icon: _locating
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.location_on,
+                                color: AppColors.navy,
+                              ),
+                        label: const Text('تحديد الموقع على الخريطة'),
+                        onPressed: _locating ? null : _useMyLocation,
+                      ),
+                    ),
+                    if (hasPharmacy)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: Text(
+                          '"تسجيل" يضيف صيدلية جديدة بهذه البيانات، و"تعديل" '
+                          'يحدّث بيانات الصيدلية الحالية.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const FieldLabel('خط العرض'),
-                      TextFormField(
-                        controller: _lat,
-                        textAlign: TextAlign.center,
-                        textDirection: TextDirection.ltr,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                          signed: true,
-                        ),
-                        onChanged: (_) => setState(() {}),
-                        validator: Validators.latitude,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const FieldLabel('خط الطول'),
-                      TextFormField(
-                        controller: _lng,
-                        textAlign: TextAlign.center,
-                        textDirection: TextDirection.ltr,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                          signed: true,
-                        ),
-                        onChanged: (_) => setState(() {}),
-                        validator: Validators.longitude,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 22),
-            LoadingButton(
-              icon: Icons.add_business_outlined,
-              label: 'تسجيل',
-              loading: _saving,
-              onPressed: () => _save(isNew: true),
-            ),
-            const SizedBox(height: 12),
-            LoadingButton(
-              icon: Icons.edit_outlined,
-              label: 'تعديل',
-              loading: _saving,
-              onPressed: hasPharmacy ? () => _save(isNew: false) : null,
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              icon: _locating
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.my_location),
-              label: const Text('تحديد الموقع على الخريطة'),
-              onPressed: _locating ? null : _useMyLocation,
-            ),
-            if (hasPharmacy)
-              const Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: Text(
-                  '"تسجيل" يضيف صيدلية جديدة بهذه البيانات، و"تعديل" يحدّث '
-                  'بيانات الصيدلية الحالية.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.muted, fontSize: 13),
-                ),
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,16 +1,51 @@
 import 'package:flutter/material.dart';
 
-/// الألوان والهوية البصرية المستخرجة من تصميم الشاشات.
+/// ألوان الهوية البصرية مأخوذة بالقيمة من تصاميم الفصل الرابع (المعدّل).
 abstract final class AppColors {
-  static const Color primary = Color(0xFF1C9C97);
-  static const Color primaryDark = Color(0xFF117A76);
-  static const Color navy = Color(0xFF0D2C4F);
-  static const Color sky = Color(0xFFDDEFFA);
-  static const Color skyDeep = Color(0xFFB9DDF3);
-  static const Color background = Color(0xFFF4F9FC);
-  static const Color border = Color(0xFFD5E3EC);
+  /// الأزرار الرئيسية (دخول، بحث، إنشاء الحساب...).
+  static const Color primary = Color(0xFF0B9AA2);
+  static const Color primaryDark = Color(0xFF087F86);
+
+  /// ترويسة الشاشات الخضراء (نتائج البحث، لوحة الصيدلي، بيانات الصيدلية...).
+  static const Color header = Color(0xFF00A19C);
+
+  /// النصوص والعناوين الكحلية.
+  static const Color navy = Color(0xFF16246B);
+  static const Color navySoft = Color(0xFF1F3A7A);
+
+  /// خلفية الواجهة الرئيسية وشريطها العلوي.
+  static const Color homeBg = Color(0xFFB1D3F8);
+  static const Color homeBar = Color(0xFFDFECFC);
+
+  /// زر تسجيل الخروج في الواجهة الرئيسية.
+  static const Color logoutBlue = Color(0xFF127FA8);
+
+  /// موجات الخلفية.
+  static const Color wave = Color(0xFFA0CDEE);
+  static const Color waveLight = Color(0xFFD6EAF8);
+  static const Color waveTeal = Color(0xFF7FD3CF);
+
+  /// خلفيات فاتحة.
+  static const Color background = Color(0xFFEEF6FD);
+  static const Color registerBg = Color(0xFFEFF6FA);
+  static const Color beige = Color(0xFFF5F3EF);
+
+  /// بطاقات.
+  static const Color dashCard = Color(0xFFBBDCF6);
+  static const Color mintCard = Color(0xFFDFF1F3);
+  static const Color resultCard = Color(0xFFC5E8E2);
+  static const Color iconBox = Color(0xFFCEECF2);
+  static const Color fieldTint = Color(0xFFE3F1F5);
+
+  /// اسم مستعار قديم لبعض الشاشات.
+  static const Color sky = waveLight;
+  static const Color skyDeep = wave;
+
+  static const Color border = Color(0xFFD5DEE6);
   static const Color success = Color(0xFF2E9E4F);
-  static const Color danger = Color(0xFFD32F2F);
+  static const Color danger = Color(0xFFC62828);
+  static const Color dangerDark = Color(0xFFB2201F);
+  static const Color directions = Color(0xFF1A5FD0);
   static const Color muted = Color(0xFF6B7C8F);
 }
 
@@ -27,6 +62,11 @@ abstract final class AppTheme {
       borderRadius: BorderRadius.circular(14),
       borderSide: const BorderSide(color: AppColors.border),
     );
+    const buttonText = TextStyle(
+      fontFamily: 'Cairo',
+      fontSize: 19,
+      fontWeight: FontWeight.w800,
+    );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
@@ -40,7 +80,7 @@ abstract final class AppTheme {
         centerTitle: true,
         titleTextStyle: TextStyle(
           fontFamily: 'Cairo',
-          fontSize: 22,
+          fontSize: 24,
           fontWeight: FontWeight.w800,
           color: AppColors.navy,
         ),
@@ -50,7 +90,7 @@ abstract final class AppTheme {
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
-          vertical: 14,
+          vertical: 15,
         ),
         border: border,
         enabledBorder: border,
@@ -60,44 +100,46 @@ abstract final class AppTheme {
         errorBorder: border.copyWith(
           borderSide: const BorderSide(color: AppColors.danger),
         ),
-        prefixIconColor: AppColors.primary,
+        prefixIconColor: AppColors.navySoft,
         suffixIconColor: AppColors.primary,
-        hintStyle: const TextStyle(color: AppColors.muted),
+        hintStyle: const TextStyle(color: Color(0xFF5E6B7A), fontSize: 16),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(52),
+          minimumSize: const Size.fromHeight(54),
+          elevation: 2,
+          shadowColor: AppColors.primaryDark.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(28),
           ),
-          textStyle: const TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: buttonText,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primaryDark,
+          backgroundColor: Colors.white,
           minimumSize: const Size.fromHeight(48),
-          side: const BorderSide(color: AppColors.primary),
+          side: const BorderSide(color: AppColors.primary, width: 1.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
           textStyle: const TextStyle(
             fontFamily: 'Cairo',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.primaryDark),
+      ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 2,
-        shadowColor: AppColors.navy.withValues(alpha: 0.12),
+        elevation: 3,
+        shadowColor: AppColors.navy.withValues(alpha: 0.14),
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),

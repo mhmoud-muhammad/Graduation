@@ -67,43 +67,40 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: WaveBackground(
         color: Colors.white,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+              padding: const EdgeInsets.fromLTRB(30, 96, 30, 20),
               child: Form(
                 key: _form,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Center(child: AppLogo(size: 120)),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'ابحث عن أدويتك بسهولة',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.muted, fontSize: 16),
-                    ),
-                    const SizedBox(height: 28),
+                    const Center(child: BrandMark()),
+                    const SizedBox(height: 30),
                     const Text(
                       'تسجيل الدخول',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.navy,
+                        color: Color(0xFF1A1F36),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      textDirection: TextDirection.ltr,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.email],
                       decoration: const InputDecoration(
                         hintText: 'البريد الإلكتروني',
-                        prefixIcon: Icon(Icons.mail_outline),
+                        suffixIcon: Icon(
+                          Icons.mail_outline,
+                          color: AppColors.primary,
+                        ),
                       ),
                       validator: Validators.email,
                     ),
@@ -116,12 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       autofillHints: const [AutofillHints.password],
                       decoration: InputDecoration(
                         hintText: 'كلمة المرور',
-                        prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscure
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
+                            _obscure ? Icons.lock : Icons.lock_open,
+                            color: AppColors.primary,
                           ),
                           onPressed: () => setState(() => _obscure = !_obscure),
                         ),
@@ -129,23 +124,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: Validators.password,
                     ),
                     Align(
-                      alignment: AlignmentDirectional.centerEnd,
+                      alignment: AlignmentDirectional.centerStart,
                       child: TextButton(
                         onPressed: _forgotPassword,
                         child: const Text('نسيت كلمة المرور؟'),
                       ),
                     ),
-                    const SizedBox(height: 6),
                     LoadingButton(
                       label: 'دخول',
                       loading: _loading,
                       onPressed: _submit,
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
                     const Text(
                       'ليس لديك حساب؟',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.muted),
+                      style: TextStyle(color: Color(0xFF4A5568)),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(context).push(
@@ -157,9 +151,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         'إنشاء حساب',
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
-                          fontSize: 17,
+                          fontSize: 19,
+                          color: AppColors.primaryDark,
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Center(
+                      child: Illustration('pharmacy_building', height: 120),
                     ),
                     const SizedBox(height: 60),
                   ],

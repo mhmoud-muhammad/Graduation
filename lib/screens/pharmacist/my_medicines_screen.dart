@@ -63,29 +63,17 @@ class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'Cairo',
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
-        title: Column(
-          children: [
-            const Text('أدوية صيدليتي'),
-            Text(
-              widget.pharmacy.pharmacyName,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: const Color(0xFFF8FBFB),
       body: Column(
         children: [
+          TealHeader(
+            title: 'أدوية صيدليتي',
+            subtitle: widget.pharmacy.pharmacyName,
+            backStyle: BackStyle.circle,
+            titleSize: 30,
+          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 8),
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
             child: TextField(
               controller: _filter,
               onChanged: (_) => setState(() {}),
@@ -169,38 +157,52 @@ class _StockCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final m = item.medicine;
     final a = item.availability;
-    Widget row(IconData icon, String label, String value) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(width: 6),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w700)),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
+    Widget row(IconData icon, String label, String value, {bool big = false}) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 1.5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: big ? 22 : 19, color: AppColors.header),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  '$label: $value',
+                  style: TextStyle(
+                    fontSize: big ? 20 : 17,
+                    fontWeight: big ? FontWeight.w800 : FontWeight.w600,
+                    color: const Color(0xFF1A1F36),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
     return Material(
-      color: AppColors.sky,
-      borderRadius: BorderRadius.circular(16),
+      color: AppColors.mintCard,
+      borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              row(Icons.medication, 'الاسم التجاري', m.tradeName),
-              row(Icons.science_outlined, 'الاسم العلمي', m.scientificName),
-              row(Icons.payments_outlined, 'السعر', Fmt.price(a.price)),
+              row(
+                Icons.payments_outlined,
+                'الاسم التجاري',
+                m.tradeName,
+                big: true,
+              ),
+              row(Icons.description_outlined, 'الاسم العلمي', m.scientificName),
+              row(Icons.inventory_2_outlined, 'السعر', Fmt.price(a.price)),
               row(
                 Icons.inventory_2_outlined,
                 'الكمية',
                 a.quantity == 0 ? '0 (نفدت الكمية)' : '${a.quantity}',
               ),
               row(
-                Icons.category_outlined,
+                Icons.medication_outlined,
                 'الشكل الصيدلاني',
                 m.pharmaceuticalForm,
               ),

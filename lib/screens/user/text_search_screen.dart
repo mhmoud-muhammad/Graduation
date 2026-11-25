@@ -76,11 +76,24 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('البحث بالكتابة')),
+      backgroundColor: const Color(0xFFF0F7FF),
+      appBar: AppBar(
+        toolbarHeight: 72,
+        title: const Text(
+          'البحث بالكتابة',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          color: AppColors.navy,
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
       body: WaveBackground(
         top: false,
+        color: const Color(0xFFF0F7FF),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 140),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 140),
           children: [
             TextField(
               controller: _query,
@@ -89,16 +102,38 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
               onSubmitted: (_) => _search(),
               decoration: const InputDecoration(
                 hintText: 'اسم الدواء (الاسم التجاري أو العلمي)',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(
+                  Icons.search,
+                  size: 28,
+                  color: Color(0xFF6B7280),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            LoadingButton(label: 'بحث', loading: _loading, onPressed: _search),
-            const SizedBox(height: 12),
-            const Text(
-              'يمكنك كتابة جزء من الاسم مثل: "بارا" أو "panadol".',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.muted),
+            const SizedBox(height: 18),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF12A7AE),
+                minimumSize: const Size.fromHeight(60),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                textStyle: const TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              onPressed: _loading ? null : _search,
+              child: _loading
+                  ? const SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.6,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('بحث'),
             ),
             if (_notFoundFor != null)
               EmptyState(
@@ -119,12 +154,8 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
               )
             else
               const Padding(
-                padding: EdgeInsets.only(top: 40),
-                child: Icon(
-                  Icons.medication,
-                  size: 120,
-                  color: AppColors.skyDeep,
-                ),
+                padding: EdgeInsets.only(top: 70),
+                child: Illustration('pills', height: 170),
               ),
           ],
         ),
