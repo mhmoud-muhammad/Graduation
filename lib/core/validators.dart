@@ -23,12 +23,6 @@ abstract final class Validators {
     return null;
   }
 
-  static String? license(String? v) {
-    if (v == null || v.trim().isEmpty) return 'رقم ترخيص مزاولة المهنة مطلوب';
-    if (v.trim().length < 3) return 'رقم الترخيص غير صحيح';
-    return null;
-  }
-
   static String? price(String? v) {
     final x = double.tryParse((v ?? '').trim());
     if (x == null) return 'أدخل سعراً صحيحاً';

@@ -37,10 +37,7 @@ service cloud.firestore {
         && request.resource.data.userId == userId
         && request.resource.data.userType in ['user', 'pharmacist']
         && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && (request.resource.data.userType == 'user'
-            || (request.resource.data.licenseNumber is string
-                && request.resource.data.licenseNumber.size() > 0));
+        && request.resource.data.name.size() > 0;
       allow update: if signedIn() && uid() == userId
         && request.resource.data.userType == resource.data.userType;
       allow delete: if false;

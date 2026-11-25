@@ -102,15 +102,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(26, 14, 26, 150),
             children: [
-              Text(
-                widget.pharmacy.pharmacyName,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.muted,
-                ),
-              ),
-              const SizedBox(height: 10),
               TextFormField(
                 controller: _trade,
                 textInputAction: TextInputAction.next,

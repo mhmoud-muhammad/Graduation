@@ -56,9 +56,9 @@ class HomeScreen extends StatelessWidget {
               color: Color(0xFF1530A0),
             ),
           ),
-          Text(
-            '${user.name.split(' ').first}، ابحث عن الدواء بالطريقة التي تناسبك',
-            style: const TextStyle(fontSize: 18, color: AppColors.navy),
+          const Text(
+            'ابحث عن الدواء بالطريقة التي تناسبك',
+            style: TextStyle(fontSize: 18, color: AppColors.navy),
           ),
           const SizedBox(height: 26),
           MenuCard(
@@ -130,22 +130,6 @@ class _UserDrawer extends StatelessWidget {
               leading: const Icon(Icons.phone_outlined),
               title: Text(user.phone!),
             ),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('عن التطبيق'),
-            onTap: () => showAboutDialog(
-              context: context,
-              applicationName: AppConfig.appName,
-              applicationVersion: '2.0.0',
-              applicationIcon: const AppLogo(size: 48),
-              children: const [
-                Text(
-                  'تطبيق للبحث عن الأدوية في الصيدليات بالاسم أو بالصورة، '
-                  'وعرض الصيدليات المتوفر فيها الدواء مرتبة حسب القرب.',
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

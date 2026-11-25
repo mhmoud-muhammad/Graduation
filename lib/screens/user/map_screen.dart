@@ -158,12 +158,6 @@ class _PharmacySheet extends StatelessWidget {
           ],
         ),
         actions: [
-          if (p.phone != null)
-            TextButton.icon(
-              icon: const Icon(Icons.call),
-              label: const Text('اتصال'),
-              onPressed: () => callPhone(p.phone!),
-            ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('إغلاق'),

@@ -70,15 +70,6 @@ class ImageAnalysis {
   }
 }
 
-/// نوع الصورة المرسلة للتحليل.
-enum ImageKind {
-  package('عبوة دواء'),
-  prescription('روشتة طبية');
-
-  const ImageKind(this.label);
-  final String label;
-}
-
 /// دواء في قائمة صيدلية (الدواء + سجل توفره: السعر والكمية).
 class StockItem {
   const StockItem(this.medicine, this.availability);

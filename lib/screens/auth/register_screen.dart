@@ -20,7 +20,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _phone = TextEditingController();
-  final _license = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
   UserType _type = UserType.user;
@@ -28,7 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _email, _phone, _license, _password, _confirm]) {
+    for (final c in [_name, _email, _phone, _password, _confirm]) {
       c.dispose();
     }
     super.dispose();
@@ -52,7 +51,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _password.text,
         phone: _phone.text,
         userType: _type,
-        licenseNumber: _type == UserType.pharmacist ? _license.text : null,
       ),
       networkMessage: Msg.registerNetwork,
       errorTitle: Msg.registerInvalid,
@@ -73,7 +71,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pharmacist = _type == UserType.pharmacist;
     return Scaffold(
       backgroundColor: AppColors.registerBg,
       appBar: AppBar(
@@ -169,17 +166,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ],
                   ],
                 ),
-                if (pharmacist) ...[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _license,
-                    decoration: _field(
-                      'رقم ترخيص مزاولة المهنة',
-                      Icons.badge_outlined,
-                    ),
-                    validator: Validators.license,
-                  ),
-                ],
                 const SizedBox(height: 22),
                 LoadingButton(
                   label: 'إنشاء الحساب',

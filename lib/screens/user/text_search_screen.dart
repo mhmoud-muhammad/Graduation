@@ -5,7 +5,6 @@ import '../../core/messages.dart';
 import '../../services/search_service.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
-import 'image_search_screen.dart';
 import 'search_flow.dart';
 
 /// واجهة البحث بالكتابة (FR-04).
@@ -136,21 +135,9 @@ class _TextSearchScreenState extends State<TextSearchScreen> {
                   : const Text('بحث'),
             ),
             if (_notFoundFor != null)
-              EmptyState(
+              const EmptyState(
                 icon: Icons.search_off,
                 title: Msg.medicineNotAvailable,
-                message:
-                    'لم يتم العثور على "$_notFoundFor". تأكد من كتابة الاسم '
-                    'أو جرّب البحث بالصورة.',
-                action: OutlinedButton.icon(
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: const Text('البحث بالصورة'),
-                  onPressed: () => Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => const ImageSearchScreen(),
-                    ),
-                  ),
-                ),
               )
             else
               const Padding(

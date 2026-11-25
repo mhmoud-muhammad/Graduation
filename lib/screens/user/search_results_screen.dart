@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/formatters.dart';
-import '../../core/launchers.dart';
 import '../../core/messages.dart';
 import '../../models/search_models.dart';
 import '../../widgets/common.dart';
@@ -138,11 +137,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 ),
                 const SizedBox(height: 14),
               ],
-              OutlinedButton.icon(
-                icon: const Icon(Icons.map_outlined),
-                label: const Text('عرض الصيدليات على الخريطة'),
-                onPressed: _openMap,
-              ),
               if (updated != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 14),
@@ -277,33 +271,6 @@ class _OfferCard extends StatelessWidget {
                         Expanded(child: Text(line2, style: sub)),
                       ],
                     ),
-                    if (p.address != null)
-                      Text(
-                        p.address!,
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 13,
-                        ),
-                      ),
-                    if (p.phone != null)
-                      InkWell(
-                        onTap: () => callPhone(p.phone!),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.phone,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              p.phone!,
-                              textDirection: TextDirection.ltr,
-                              style: const TextStyle(color: AppColors.primary),
-                            ),
-                          ],
-                        ),
-                      ),
                   ],
                 ),
               ),

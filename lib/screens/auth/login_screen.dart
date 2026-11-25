@@ -20,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
-  bool _obscure = true;
 
   @override
   void dispose() {
@@ -91,19 +90,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 14),
                     TextFormField(
                       controller: _password,
-                      obscureText: _obscure,
+                      obscureText: true,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _submit(),
                       autofillHints: const [AutofillHints.password],
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'كلمة المرور',
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscure ? Icons.lock : Icons.lock_open,
-                            color: AppColors.primary,
-                          ),
-                          onPressed: () => setState(() => _obscure = !_obscure),
-                        ),
+                        suffixIcon: Icon(Icons.lock, color: AppColors.primary),
                       ),
                       validator: Validators.password,
                     ),

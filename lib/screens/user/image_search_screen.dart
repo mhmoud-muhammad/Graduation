@@ -10,7 +10,6 @@ import '../../services/search_service.dart';
 import '../../services/services.dart';
 import '../../widgets/common.dart';
 import 'search_flow.dart';
-import 'text_search_screen.dart';
 
 /// واجهة البحث بالصورة (FR-05, FR-06, FR-07, FR-13).
 ///
@@ -24,7 +23,6 @@ class ImageSearchScreen extends StatefulWidget {
 
 class _ImageSearchScreenState extends State<ImageSearchScreen> {
   final _picker = ImagePicker();
-  ImageKind _kind = ImageKind.package;
   Uint8List? _bytes;
   String _mime = 'image/jpeg';
   bool _loading = false;
@@ -84,11 +82,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
     await runWithRetry(
       context,
       () async {
-        analysis = await Services.I.gemini.analyze(
-          bytes,
-          kind: _kind,
-          mimeType: _mime,
-        );
+        analysis = await Services.I.gemini.analyze(bytes, mimeType: _mime);
         if (!analysis!.readable || analysis!.isEmpty) return;
         if (mounted) setState(() => _status = 'جاري البحث عن الدواء...');
         raw = await Services.I.search.findByAnalysis(analysis!);
@@ -105,12 +99,6 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
     final r = raw;
     if (r == null || r.isEmpty) return;
     await showSearchResults(context, r, query: analysis!.allNames.join('، '));
-  }
-
-  void _searchByName(String name) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => TextSearchScreen(initialQuery: name)),
-    );
   }
 
   @override
@@ -137,24 +125,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(26, 16, 26, 140),
           children: [
-            // FR-05 / FR-06: نوع الصورة (عبوة دواء أو روشتة طبية).
-            SegmentedButton<ImageKind>(
-              style: SegmentedButton.styleFrom(
-                selectedBackgroundColor: AppColors.primary,
-                selectedForegroundColor: Colors.white,
-                backgroundColor: Colors.white,
-              ),
-              segments: [
-                for (final k in ImageKind.values)
-                  ButtonSegment(value: k, label: Text(k.label)),
-              ],
-              selected: {_kind},
-              onSelectionChanged: _loading
-                  ? null
-                  : (s) => setState(() => _kind = s.first),
-            ),
-            const SizedBox(height: 14),
-            _PreviewBox(bytes: _bytes, kind: _kind, loading: _loading),
+            _PreviewBox(bytes: _bytes, loading: _loading),
             const SizedBox(height: 14),
             Text(
               _loading
@@ -165,11 +136,7 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
             ),
             if (a != null && !_loading) ...[
               const SizedBox(height: 12),
-              _AnalysisCard(
-                analysis: a,
-                notAvailable: _notAvailable,
-                onSearchName: _searchByName,
-              ),
+              _AnalysisCard(analysis: a, notAvailable: _notAvailable),
             ],
             const SizedBox(height: 20),
             _pickButton(
@@ -183,14 +150,6 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
               'التقاط صورة بالكاميرا',
               ImageSource.camera,
             ),
-            if (_bytes != null && !_loading) ...[
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.refresh),
-                label: const Text(Msg.retry),
-                onPressed: _analyze,
-              ),
-            ],
           ],
         ),
       ),
@@ -223,14 +182,9 @@ class _ImageSearchScreenState extends State<ImageSearchScreen> {
 }
 
 class _PreviewBox extends StatelessWidget {
-  const _PreviewBox({
-    required this.bytes,
-    required this.kind,
-    required this.loading,
-  });
+  const _PreviewBox({required this.bytes, required this.loading});
 
   final Uint8List? bytes;
-  final ImageKind kind;
   final bool loading;
 
   @override
@@ -267,9 +221,7 @@ class _PreviewBox extends StatelessWidget {
                           ),
                   ),
                   Text(
-                    kind == ImageKind.package
-                        ? 'ضع صورة علبة الدواء أو الشريط هنا للبحث'
-                        : 'ضع صورة الروشتة هنا للبحث',
+                    'ضع صورة علبة الدواء أو الشريط هنا للبحث',
                     style: const TextStyle(
                       color: Color(0xFF1A1F36),
                       fontSize: 16,
@@ -319,69 +271,41 @@ class _DashedBorder extends CustomPainter {
 }
 
 class _AnalysisCard extends StatelessWidget {
-  const _AnalysisCard({
-    required this.analysis,
-    required this.notAvailable,
-    required this.onSearchName,
-  });
+  const _AnalysisCard({required this.analysis, required this.notAvailable});
 
   final ImageAnalysis analysis;
   final bool notAvailable;
-  final ValueChanged<String> onSearchName;
 
   @override
   Widget build(BuildContext context) {
-    if (!analysis.readable || analysis.isEmpty) {
-      return Card(
-        color: const Color(0xFFFFF4E5),
-        child: ListTile(
-          leading: const Icon(Icons.blur_on, color: Colors.orange),
-          title: const Text(Msg.imageUnclear),
-          subtitle: analysis.note == null ? null : Text(analysis.note!),
-        ),
-      );
-    }
+    final unclear = !analysis.readable || analysis.isEmpty;
     return Card(
+      color: unclear || notAvailable ? const Color(0xFFFFF4E5) : null,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              notAvailable
+              unclear
+                  ? Msg.imageUnclear
+                  : notAvailable
                   ? Msg.medicineNotAvailable
                   : 'المعلومات المستخرجة من الصورة',
               style: TextStyle(
                 fontWeight: FontWeight.w800,
-                color: notAvailable ? AppColors.danger : AppColors.navy,
+                color: unclear || notAvailable
+                    ? AppColors.danger
+                    : AppColors.navy,
               ),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final n in analysis.allNames)
-                  ActionChip(
-                    avatar: const Icon(Icons.search, size: 18),
-                    label: Text(n),
-                    onPressed: () => onSearchName(n),
-                  ),
-                for (final f in analysis.forms)
-                  Chip(
-                    avatar: const Icon(Icons.category_outlined, size: 18),
-                    label: Text(f),
-                  ),
-              ],
-            ),
-            if (notAvailable)
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  'اضغط على أي اسم لتعديله والبحث عنه بالكتابة.',
-                  style: TextStyle(color: AppColors.muted),
-                ),
+            if (!unclear) ...[
+              const SizedBox(height: 6),
+              Text(
+                analysis.allNames.join('، '),
+                style: const TextStyle(color: AppColors.navy),
               ),
+            ],
           ],
         ),
       ),

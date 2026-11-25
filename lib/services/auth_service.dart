@@ -33,7 +33,6 @@ class AuthService {
     required String password,
     required UserType userType,
     String? phone,
-    String? licenseNumber,
   }) async {
     final cred = await Net.guard(
       () => _auth.createUserWithEmailAndPassword(
@@ -52,7 +51,6 @@ class AuthService {
             email: email.trim(),
             phone: phone?.trim(),
             userType: userType,
-            licenseNumber: licenseNumber?.trim(),
           ),
         ),
       );

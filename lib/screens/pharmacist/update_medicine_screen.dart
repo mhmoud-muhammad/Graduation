@@ -275,10 +275,6 @@ class _UpdateMedicineScreenState extends State<UpdateMedicineScreen> {
                 [
                   m.scientificName,
                   'الشكل الصيدلاني: ${m.pharmaceuticalForm}',
-                  'السعر الحالي: ${Fmt.price(item.availability.price)} • '
-                      'الكمية: ${item.availability.quantity}',
-                  if (item.availability.updatedAt != null)
-                    'آخر تحديث: ${Fmt.date(item.availability.updatedAt)}',
                 ].join('\n'),
               ),
             ),

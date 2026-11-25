@@ -76,7 +76,6 @@ class _PharmacistDashboardState extends State<PharmacistDashboard> {
       builder: (context, snap) {
         final list = snap.data ?? const <Pharmacy>[];
         final current = _current(list);
-        final loading = snap.connectionState == ConnectionState.waiting;
         return Scaffold(
           backgroundColor: Colors.white,
           body: Column(
@@ -114,22 +113,6 @@ class _PharmacistDashboardState extends State<PharmacistDashboard> {
                         pharmacies: list,
                         current: current,
                         onChanged: (id) => setState(() => _currentId = id),
-                      ),
-                    if (!loading && list.isEmpty)
-                      Card(
-                        color: const Color(0xFFFFF4E5),
-                        child: ListTile(
-                          leading: const Icon(
-                            Icons.info_outline,
-                            color: Colors.orange,
-                          ),
-                          title: const Text('سجّل بيانات صيدليتك'),
-                          subtitle: const Text(
-                            'أدخل اسم الصيدلية وموقعها حتى تظهر أدويتك في '
-                            'نتائج البحث.',
-                          ),
-                          onTap: () => _openInfo(null),
-                        ),
                       ),
                     const SizedBox(height: 10),
                     MenuCard(

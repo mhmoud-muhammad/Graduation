@@ -38,19 +38,13 @@ class GeminiService {
 - اجعل readable=false إذا كانت الصورة غير واضحة أو لا تحتوي على دواء.
 - لا تخمّن أسماء غير ظاهرة في الصورة.''';
 
-  static String _prompt(ImageKind kind) => switch (kind) {
-    ImageKind.package =>
-      'هذه صورة لعبوة أو شريط دواء. استخرج اسم الدواء التجاري والاسم '
-          'العلمي (المادة الفعالة) والباركود إن ظهر.\n$_schema',
-    ImageKind.prescription =>
-      'هذه صورة لروشتة (وصفة طبية) قد تكون بخط اليد. استخرج أسماء كل '
-          'الأدوية المكتوبة فيها (التجارية والعلمية) بأفضل قراءة ممكنة.\n'
-          '$_schema',
-  };
+  static const String _prompt =
+      'هذه صورة لعبوة دواء أو شريط دواء أو روشتة طبية (قد تكون بخط اليد). '
+      'استخرج اسم الدواء التجاري والاسم العلمي (المادة الفعالة) والشكل '
+      'الصيدلاني لكل دواء يظهر فيها.\n$_schema';
 
   Future<ImageAnalysis> analyze(
     Uint8List bytes, {
-    required ImageKind kind,
     String mimeType = 'image/jpeg',
   }) async {
     final GenerateContentResponse response;
@@ -58,10 +52,7 @@ class GeminiService {
       await Net.ensureOnline();
       response = await _m
           .generateContent([
-            Content.multi([
-              TextPart(_prompt(kind)),
-              InlineDataPart(mimeType, bytes),
-            ]),
+            Content.multi([TextPart(_prompt), InlineDataPart(mimeType, bytes)]),
           ])
           .timeout(const Duration(seconds: 45));
     } on FirebaseAIException catch (e) {

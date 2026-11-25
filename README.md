@@ -32,7 +32,7 @@
 
 | الرمز | المتطلب | الكود |
 |---|---|---|
-| FR-01 | إنشاء حساب بالاسم والبريد والهاتف وكلمة المرور ونوع الحساب، ورقم ترخيص مزاولة المهنة للصيدلي | `screens/auth/register_screen.dart` |
+| FR-01 | إنشاء حساب بالاسم والبريد والهاتف وكلمة المرور ونوع الحساب (مستخدم / صيدلي) | `screens/auth/register_screen.dart` |
 | FR-02 | تسجيل الدخول عبر Firebase Authentication | `screens/auth/login_screen.dart` |
 | FR-03 | التوجيه حسب نوع الحساب وتسجيل الخروج | `screens/auth/auth_gate.dart`, `screens/auth/logout.dart` |
 | FR-04 | البحث بالاسم العلمي أو التجاري | `screens/user/text_search_screen.dart` |
@@ -78,7 +78,7 @@ lib/
 
 | المجموعة | المعرّف | الحقول |
 |---|---|---|
-| `users` | UID من Auth | `userId, name, email, phone, userType (user/pharmacist), licenseNumber (للصيدلي), createdAt` |
+| `users` | UID من Auth | `userId, name, email, phone, userType (user/pharmacist), createdAt` |
 | `pharmacies` | تلقائي | `pharmacyId, ownerId, pharmacyName, address, phone, latitude, longitude, updatedAt` |
 | `medicines` | تلقائي | `medicineId, tradeName, scientificName, pharmaceuticalForm` + حقلان تقنيان للبحث: `searchKeys, identityKey` |
 | `availability` | `{pharmacyId}_{medicineId}` | `availabilityId, medicineId, pharmacyId, price, quantity, updatedAt` |
@@ -169,7 +169,7 @@ flutter build apk --release
 ```
 
 ### 7) تجربة النظام
-1. أنشئ حساباً بنوع **صيدلي** (مع رقم الترخيص) ← يعود التطبيق لشاشة الدخول ← سجّل الدخول.
+1. أنشئ حساباً بنوع **صيدلي** ← يعود التطبيق لشاشة الدخول ← سجّل الدخول.
 2. «بيانات الصيدلية» ← أدخل الاسم وحدد الموقع ← **تسجيل**.
 3. «إضافة دواء» (مثال: `Panadol` / `Paracetamol` / السعر 15 / الكمية 50 / أقراص).
 4. سجّل الخروج وأنشئ حساباً بنوع **مستخدم** ← «البحث بالكتابة» ← اكتب `pana` أو `باراسيتامول`،
