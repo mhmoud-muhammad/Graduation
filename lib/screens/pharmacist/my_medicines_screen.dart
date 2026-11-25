@@ -99,19 +99,12 @@ class _MyMedicinesScreenState extends State<MyMedicinesScreen> {
                         message: 'أضف الأدوية من "إضافة دواء" في لوحة الصيدلي.',
                       );
                     }
-                    final items = all;
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(18, 4, 18, 30),
-                      itemCount: items.length + 1,
+                      itemCount: all.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, i) {
-                        if (i == 0) {
-                          return Text(
-                            'عدد الأدوية: ${all.length}',
-                            style: const TextStyle(color: AppColors.muted),
-                          );
-                        }
-                        final item = items[i - 1];
+                        final item = all[i];
                         return _StockCard(
                           item: item,
                           onTap: () => Navigator.of(context).push(
