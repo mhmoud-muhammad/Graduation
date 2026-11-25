@@ -65,9 +65,6 @@ class AuthService {
     await _auth.signOut();
   }
 
-  Future<void> sendPasswordReset(String email) =>
-      Net.guard(() => _auth.sendPasswordResetEmail(email: email.trim()));
-
   /// تسلسل تسجيل الخروج: طلب إنهاء الجلسة ← (ضعف الإنترنت: تعذر تسجيل
   /// الخروج) ← تم إنهاء الجلسة بنجاح ← الانتقال إلى شاشة تسجيل الدخول.
   Future<void> signOut() async {

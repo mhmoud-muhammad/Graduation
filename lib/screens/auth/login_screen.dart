@@ -48,22 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
-  Future<void> _forgotPassword() async {
-    if (Validators.email(_email.text) != null) {
-      showSnack(context, 'أدخل بريدك الإلكتروني أولاً', error: true);
-      return;
-    }
-    final ok = await runWithRetry(
-      context,
-      () => Services.I.auth.sendPasswordReset(_email.text),
-      networkMessage: Msg.operationNetwork,
-      errorTitle: 'تعذر إرسال رابط إعادة التعيين',
-    );
-    if (ok && mounted) {
-      showSnack(context, 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,13 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: Validators.password,
                     ),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton(
-                        onPressed: _forgotPassword,
-                        child: const Text('نسيت كلمة المرور؟'),
-                      ),
-                    ),
+                    const SizedBox(height: 22),
                     LoadingButton(
                       label: 'دخول',
                       loading: _loading,
