@@ -135,12 +135,12 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
   }
 
   Widget _labeled(String label, IconData icon, Widget field) => Padding(
-    padding: const EdgeInsets.only(top: 8),
+    padding: const EdgeInsets.only(top: 4),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsetsDirectional.only(start: 66, bottom: 4),
+          padding: const EdgeInsetsDirectional.only(start: 66, bottom: 2),
           child: Text(
             label,
             style: const TextStyle(
@@ -151,7 +151,7 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
         ),
         Row(
           children: [
-            IconBox(icon),
+            IconBox(icon, size: 48),
             const SizedBox(width: 12),
             Expanded(child: field),
           ],
@@ -161,6 +161,8 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
   );
 
   InputDecoration get _pill => InputDecoration(
+    isDense: true,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(26)),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(26),
@@ -193,6 +195,8 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
             signed: true,
           ),
           decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
             filled: true,
             fillColor: AppColors.fieldTint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -202,6 +206,21 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
         ),
       ],
     ),
+  );
+
+  Widget _actionButton(String label, VoidCallback? onPressed) => FilledButton(
+    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+    onPressed: _saving ? null : onPressed,
+    child: _saving
+        ? const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.4,
+              color: Colors.white,
+            ),
+          )
+        : Text(label),
   );
 
   @override
@@ -227,7 +246,7 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
               child: Form(
                 key: _form,
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 130),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
                   children: [
                     _labeled(
                       'اسم الصيدلية',
@@ -262,7 +281,7 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
                       ),
                     ),
                     const Padding(
-                      padding: EdgeInsets.only(top: 12, bottom: 6),
+                      padding: EdgeInsets.only(top: 8, bottom: 4),
                       child: Text(
                         'الموقع الجغرافي',
                         style: TextStyle(
@@ -275,7 +294,7 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: SizedBox(
-                        height: 200,
+                        height: 165,
                         child: appMap(
                           {
                             if (point != null)
@@ -328,23 +347,18 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
                         _coord('خط الطول', _lng, Validators.longitude),
                       ],
                     ),
-                    const SizedBox(height: 22),
-                    LoadingButton(
-                      label: 'تسجيل',
-                      loading: _saving,
-                      onPressed: () => _save(isNew: true),
+                    const SizedBox(height: 16),
+                    _actionButton('تسجيل', () => _save(isNew: true)),
+                    const SizedBox(height: 10),
+                    _actionButton(
+                      'تعديل',
+                      hasPharmacy ? () => _save(isNew: false) : null,
                     ),
-                    const SizedBox(height: 12),
-                    LoadingButton(
-                      label: 'تعديل',
-                      loading: _saving,
-                      onPressed: hasPharmacy ? () => _save(isNew: false) : null,
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Center(
                       child: OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(260, 50),
+                          minimumSize: const Size(260, 46),
                           foregroundColor: AppColors.navy,
                         ),
                         icon: _locating
@@ -363,19 +377,6 @@ class _PharmacyInfoScreenState extends State<PharmacyInfoScreen> {
                         onPressed: _locating ? null : _useMyLocation,
                       ),
                     ),
-                    if (hasPharmacy)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 10),
-                        child: Text(
-                          '"تسجيل" يضيف صيدلية جديدة بهذه البيانات، و"تعديل" '
-                          'يحدّث بيانات الصيدلية الحالية.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
